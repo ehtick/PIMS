@@ -59,21 +59,25 @@ const setParcelFieldsFromLayerData = (
 ) => {
   if (isFormInStateToSetLayerData(layerData, formikRef, nameSpace)) {
     toast.dark('Autofilling form utilizing BC Geographic Warehouse data.', { autoClose: 7000 });
-    const { values, resetForm } = formikRef.current!;
+    const { values, setValues } = formikRef.current!;
     let newValues = { ...values };
     if (nameSpace) {
-      newValues = setIn(newValues, nameSpace, getInitialValues());
+      newValues = setIn(newValues, nameSpace, {
+        ...getInitialValues(),
+        ...getIn(values, nameSpace),
+      });
     }
 
     const layerParcelData = layerData!.data;
-    const pid = layerData?.data?.PID || layerData?.data?.PID_NUMBER?.toString();
-    newValues = setIn(newValues, `${nameSpace}.pid`, !!pid ? pidFormatter(pid) : '');
-    newValues = setIn(newValues, `${nameSpace}.pin`, layerParcelData.PIN || '');
+
+    //These fields are generic and used in both buildings and parcels
     newValues = setIn(
       newValues,
       `${nameSpace}.landArea`,
       squareMetersToHectares(+layerParcelData.FEATURE_AREA_SQM),
     );
+    newValues = setIn(newValues, `${nameSpace}.latitude`, layerParcelData.CENTER.lat);
+    newValues = setIn(newValues, `${nameSpace}.longitude`, layerParcelData.CENTER.lng);
     const administrativeArea = getAdminAreaFromLayerData(
       administrativeAreas,
       layerParcelData.MUNICIPALITY,
@@ -85,19 +89,31 @@ const setParcelFieldsFromLayerData = (
         administrativeArea.name,
       );
     }
-    const searchAddress = getIn(values, `${nameSpace}.searchAddress`);
-    if (searchAddress && getIn(newValues, `${nameSpace}.address.line1`) === '') {
-      newValues = setIn(newValues, `${nameSpace}.address.line1`, searchAddress);
+
+    //parcel only fields.
+    if (getIn(values, `${nameSpace}.pid`) !== undefined) {
+      const pid = layerData?.data?.PID || layerData?.data?.PID_NUMBER?.toString();
+      newValues = setIn(newValues, `${nameSpace}.pid`, !!pid ? pidFormatter(pid) : '');
+      newValues = setIn(newValues, `${nameSpace}.pin`, layerParcelData.PIN || '');
+
+      newValues = setIn(newValues, `${nameSpace}.agencyId`, agencyId);
+      const searchAddress = getIn(values, `${nameSpace}.searchAddress`);
+      if (searchAddress && getIn(newValues, `${nameSpace}.address.line1`) === '') {
+        newValues = setIn(newValues, `${nameSpace}.address.line1`, searchAddress);
+      }
+      newValues = setIn(
+        newValues,
+        `${nameSpace}.searchPin`,
+        getIn(values, `${nameSpace}.searchPin`),
+      );
+      newValues = setIn(
+        newValues,
+        `${nameSpace}.searchPid`,
+        getIn(values, `${nameSpace}.searchPid`),
+      );
+      newValues = setIn(newValues, `${nameSpace}.searchAddress`, searchAddress);
     }
-    if (!!layerParcelData.CENTER?.lat && !!layerParcelData.CENTER?.lng) {
-      newValues = setIn(newValues, `${nameSpace}.latitude`, layerParcelData.CENTER.lat);
-      newValues = setIn(newValues, `${nameSpace}.longitude`, layerParcelData.CENTER.lng);
-    }
-    newValues = setIn(newValues, `${nameSpace}.agencyId`, agencyId);
-    newValues = setIn(newValues, `${nameSpace}.searchPin`, getIn(values, `${nameSpace}.searchPin`));
-    newValues = setIn(newValues, `${nameSpace}.searchPid`, getIn(values, `${nameSpace}.searchPid`));
-    newValues = setIn(newValues, `${nameSpace}.searchAddress`, searchAddress);
-    resetForm({ values: newValues });
+    setValues({ ...values, ...newValues });
   }
 };
 

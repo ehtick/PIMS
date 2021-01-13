@@ -1,5 +1,6 @@
 import * as Yup from 'yup';
 import moment from 'moment';
+import { emptyStringToNull } from 'utils';
 
 Yup.addMethod(Yup.string, 'optional', function optional() {
   return this.transform(value => {
@@ -10,13 +11,6 @@ Yup.addMethod(Yup.string, 'optional', function optional() {
       : value;
   });
 });
-
-function emptyStringToNull(value: any, originalValue: any) {
-  if (typeof originalValue === 'string' && originalValue === '') {
-    return undefined;
-  }
-  return value;
-}
 
 export const AccessRequestSchema = Yup.object().shape({
   agency: Yup.number()
@@ -208,6 +202,12 @@ export const OccupancySchema = Yup.object().shape({
     .min(0, 'Total Area must be a valid number')
     .transform(emptyStringToNull)
     .required('Required'),
+  buildingTenancy: Yup.string().max(100, 'Tenancy must be less then 100 characters'),
+  buildingTenancyUpdatedOn: Yup.string().when('buildingTenancy', {
+    is: val => val && val.length > 0,
+    then: Yup.string().required('Required'),
+    otherwise: Yup.string().nullable(),
+  }),
 });
 
 export const LandSchema = Yup.object().shape({

@@ -2,10 +2,7 @@ import { FeatureCollection, Geometry, GeoJsonProperties } from 'geojson';
 import axios from 'axios';
 import { LatLng, geoJSON } from 'leaflet';
 import { useCallback, Dispatch } from 'react';
-import parcelLayerDataSlice, {
-  saveParcelLayerData,
-  saveParcelLayerFeature,
-} from 'reducers/parcelLayerDataSlice';
+import parcelLayerDataSlice, { saveParcelLayerData } from 'reducers/parcelLayerDataSlice';
 import { error } from 'actions/genericActions';
 import { toast } from 'react-toastify';
 import { showLoading, hideLoading } from 'react-redux-loading-bar';
@@ -37,6 +34,7 @@ interface IUserLayerQuery {
 export const saveParcelDataLayerResponse = (
   resp: FeatureCollection<Geometry, GeoJsonProperties>,
   dispatch: Dispatch<any>,
+  latLng?: LatLng,
 ) => {
   if (resp?.features?.length > 0) {
     //save with a synthetic event to timestamp the relevance of this data.
@@ -45,16 +43,12 @@ export const saveParcelDataLayerResponse = (
         e: { timeStamp: document?.timeline?.currentTime ?? 0 } as any,
         data: {
           ...resp.features[0].properties!,
-          CENTER: geoJSON(resp.features[0].geometry)
-            .getBounds()
-            .getCenter(),
+          CENTER:
+            latLng ??
+            geoJSON(resp.features[0].geometry)
+              .getBounds()
+              .getCenter(),
         },
-      }),
-    );
-    //save the entire feature to redux for use within the map.
-    dispatch(
-      saveParcelLayerFeature({
-        ...resp.features[0],
       }),
     );
   } else {
@@ -70,10 +64,11 @@ export const saveParcelDataLayerResponse = (
 export const handleParcelDataLayerResponse = (
   response: Promise<FeatureCollection<Geometry, GeoJsonProperties>>,
   dispatch: Dispatch<any>,
+  latLng?: LatLng,
 ) => {
   return response
     .then((resp: FeatureCollection<Geometry, GeoJsonProperties>) => {
-      saveParcelDataLayerResponse(resp, dispatch);
+      saveParcelDataLayerResponse(resp, dispatch, latLng);
     })
     .catch((axiosError: any) => {
       dispatch(error(parcelLayerDataSlice.reducer.name, axiosError?.response?.status, axiosError));
