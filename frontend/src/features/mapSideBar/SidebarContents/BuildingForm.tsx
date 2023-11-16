@@ -1,4 +1,5 @@
 import variables from '_variables.module.scss';
+import './BuildingForm.scss';
 import { IBuilding } from 'actions/parcelsActions';
 import {
   ISteppedFormValues,
@@ -326,7 +327,7 @@ export const ViewOnlyBuildingForm: React.FC<Partial<IParentBuildingForm>> = (pro
  */
 export const valuesToApiFormat = (values: ISteppedFormValues<IBuilding>): IBuilding => {
   const apiValues = _.cloneDeep(values);
-  apiValues.data.parcels = values.data.parcels.map(formParcel =>
+  apiValues.data.parcels = values.data.parcels.map((formParcel) =>
     landValuesToApiFormat({ data: formParcel } as any),
   );
   apiValues.data.evaluations = filterEmptyFinancials(apiValues.data.evaluations);
@@ -357,7 +358,7 @@ const BuidingForm: React.FC<IParentBuildingForm> = ({
   const { createBuilding, updateBuilding } = useBuildingApi();
   const withNameSpace: Function = React.useCallback(
     (name?: string) => {
-      return [nameSpace ?? '', name].filter(x => x).join('.');
+      return [nameSpace ?? '', name].filter((x) => x).join('.');
     },
     [nameSpace],
   );
@@ -425,7 +426,7 @@ const BuidingForm: React.FC<IParentBuildingForm> = ({
       (err: any) => yupToFormErrors(err),
     );
 
-    let errors = await yupErrors;
+    const errors = await yupErrors;
     return Object.keys(errors).length ? Promise.resolve({ data: errors }) : Promise.resolve({});
   };
   return (
@@ -468,6 +469,7 @@ const BuidingForm: React.FC<IParentBuildingForm> = ({
             actions.resetForm({ values: { ...values, ...{ data: building as any } } });
             setBuildingToAssociateLand(building);
           } catch (error) {
+            // empty
           } finally {
             actions.setSubmitting(false);
           }

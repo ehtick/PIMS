@@ -1,9 +1,6 @@
 import styled from 'styled-components';
 
 export const GeocoderAutoCompleteStyled = styled.div`
-  width: 250px;
-  font-size: 1rem;
-  position: relative;
 
   .form.Control {
     width: 100%;
@@ -27,9 +24,8 @@ export const GeocoderAutoCompleteStyled = styled.div`
     margin: 0;
     padding: 0;
     position: absolute;
-    overflow-y: auto;
     z-index: 999;
-    top: 0px;
+    top: 40px;
     left: -50px;
   }
 

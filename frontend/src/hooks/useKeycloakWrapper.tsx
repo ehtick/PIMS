@@ -64,9 +64,9 @@ export interface IKeycloak {
  */
 export function useKeycloakWrapper(): IKeycloak {
   const { keycloak: keycloakInstance } = useKeycloak();
-  const userInfo = useKeycloak().keycloak.tokenParsed as IUserInfo;
+  const userInfo = keycloakInstance.tokenParsed as IUserInfo;
   //@ts-ignore
-  const usersAgencies: number[] = useSelector(state => state.usersAgencies);
+  const usersAgencies: number[] = useSelector((state) => state.usersAgencies);
   /**
    * Determine if the user has the specified 'claim'
    * @param claim - The name of the claim
@@ -76,8 +76,8 @@ export function useKeycloakWrapper(): IKeycloak {
       return false;
     }
     return typeof claim === 'string'
-      ? userInfo?.client_roles?.some(role => role === claim)
-      : claim.some(c => userInfo?.client_roles?.some(role => role === c));
+      ? userInfo?.client_roles?.some((role) => role === claim)
+      : claim.some((c) => userInfo?.client_roles?.some((role) => role === c));
   };
 
   /**
@@ -90,7 +90,7 @@ export function useKeycloakWrapper(): IKeycloak {
     }
     return typeof role === 'string'
       ? userInfo?.client_roles?.includes(role)
-      : role.some(r => userInfo?.client_roles?.includes(r));
+      : role.some((r) => userInfo?.client_roles?.includes(r));
   };
 
   /**
@@ -114,7 +114,7 @@ export function useKeycloakWrapper(): IKeycloak {
    */
   const getSystemRoles = (): Array<string> => {
     let systemRoles: string[] = userInfo?.client_roles ?? [];
-    systemRoles = systemRoles.filter(s => s.charAt(0) === s.charAt(0).toUpperCase());
+    systemRoles = systemRoles.filter((s) => s.charAt(0) === s.charAt(0).toUpperCase());
     return systemRoles ?? [];
   };
 
@@ -155,20 +155,16 @@ export function useKeycloakWrapper(): IKeycloak {
    * Return the user's first name
    */
   const firstName = (): string | undefined => {
-    if (userInfo?.identity_provider.includes('bceid')) {
-      return userInfo?.displayName?.slice(2).split(' ')[0];
-    }
-    return userInfo?.given_name;
+    if (userInfo?.given_name === '') return userInfo?.displayName?.slice(2).split(' ')[0];
+    return userInfo?.given_name ?? userInfo?.displayName?.slice(2).split(' ')[0];
   };
 
   /**
    * Return the user's last name
    */
   const lastName = (): string | undefined => {
-    if (userInfo?.identity_provider.includes('bceid')) {
-      return userInfo?.displayName?.slice(2).split(' ')[1];
-    }
-    return userInfo?.family_name;
+    if (userInfo?.family_name === '') return userInfo?.displayName?.slice(2).split(' ')[1];
+    return userInfo?.family_name ?? userInfo?.displayName?.slice(2).split(' ')[1];
   };
 
   /**
@@ -251,7 +247,6 @@ export function useKeycloakWrapper(): IKeycloak {
       canUserViewProperty,
       idir_user_guid: userInfo?.idir_user_guid && convertToGuidFormat(userInfo.idir_user_guid),
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [keycloakInstance, usersAgencies.length],
   );
 }

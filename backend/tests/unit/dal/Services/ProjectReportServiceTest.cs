@@ -1,14 +1,10 @@
 using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Moq;
 using Pims.Core.Comparers;
-using Pims.Core.Extensions;
 using Pims.Core.Test;
 using Pims.Dal.Entities;
 using Pims.Dal.Entities.Models;
 using Pims.Dal.Exceptions;
-using Pims.Dal.Helpers.Extensions;
 using Pims.Dal.Security;
 using Pims.Dal.Services;
 using System;
@@ -652,7 +648,7 @@ namespace Pims.Dal.Test.Services
             // Assert
             Assert.NotNull(result);
             Assert.True(result.Id > 0);
-            result.Should().Equals(report);
+            result.Should().Be(report);
         }
 
         /// <summary>
@@ -686,7 +682,7 @@ namespace Pims.Dal.Test.Services
             // Assert
             Assert.NotNull(result);
             Assert.True(result.Id > 0);
-            result.Should().Equals(reportToUpdate);
+            result.To.Should().Be(reportToUpdate.To.Value, DateTime.UtcNow.Date.ToString());
             Assert.NotEmpty(snapshots);
             Assert.All<ProjectSnapshot>(snapshots, s => Assert.Equal<DateTime>(reportToUpdate.To.Value, s.SnapshotOn));
         }

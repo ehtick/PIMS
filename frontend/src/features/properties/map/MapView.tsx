@@ -2,14 +2,13 @@ import './MapView.scss';
 
 import { IProperty, IPropertyDetail } from 'actions/parcelsActions';
 import classNames from 'classnames';
-import Map, { MapViewportChangeEvent } from 'components/maps/leaflet/Map';
+import Map from 'components/maps/leaflet/Map';
 import { FilterProvider } from 'components/maps/providers/FIlterProvider';
 import { PropertyPopUpContextProvider } from 'components/maps/providers/PropertyPopUpProvider';
 import * as API from 'constants/API';
 import MapSideBarContainer from 'features/mapSideBar/containers/MapSideBarContainer';
 import useCodeLookups from 'hooks/useLookupCodes';
 import { LeafletMouseEvent } from 'leaflet';
-import queryString from 'query-string';
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from 'store';
@@ -42,9 +41,9 @@ interface MapViewProps {
 const MapView: React.FC<MapViewProps> = (props: MapViewProps) => {
   const lookupCodes = useCodeLookups();
   const dispatch = useAppDispatch();
-  const properties = useAppSelector(store => store.parcel.properties);
+  const properties = useAppSelector((store) => store.parcel.properties);
   const [loadedProperties, setLoadedProperties] = useState(false);
-  const propertyDetail = useAppSelector(state => state.parcel.propertyDetail);
+  const propertyDetail = useAppSelector((state) => state.parcel.propertyDetail);
   const agencies = lookupCodes.getByType(API.AGENCY_CODE_SET_NAME);
   const administrativeAreas = lookupCodes.getByType(API.AMINISTRATIVE_AREA_CODE_SET_NAME);
 
@@ -64,10 +63,14 @@ const MapView: React.FC<MapViewProps> = (props: MapViewProps) => {
   }, [dispatch]);
 
   const location = useLocation();
-  const urlParsed = queryString.parse(location.search);
+  const queryParams = new URLSearchParams(location.search);
+  const urlParsed: any = {};
+  for (const [key, value] of queryParams.entries()) {
+    urlParsed[key] = value;
+  }
   const disableFilter = urlParsed.sidebar === 'true' ? true : false;
   return (
-    <div className={classNames(showSideBar ? 'side-bar' : '', 'd-flex')}>
+    <div className={classNames(showSideBar ? 'side-bar' : 'full-height', 'd-flex')}>
       <MapSideBarContainer properties={properties} />
       <FilterProvider>
         <PropertyPopUpContextProvider>
@@ -83,7 +86,7 @@ const MapView: React.FC<MapViewProps> = (props: MapViewProps) => {
             onMarkerPopupClose={() => {
               dispatch(storePropertyDetail(null));
             }}
-            onViewportChanged={(mapFilterModel: MapViewportChangeEvent) => {
+            onViewportChanged={() => {
               if (!loadedProperties) {
                 setLoadedProperties(true);
               }

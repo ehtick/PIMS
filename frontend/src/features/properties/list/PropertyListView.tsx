@@ -24,7 +24,6 @@ import useKeycloakWrapper from 'hooks/useKeycloakWrapper';
 import useCodeLookups from 'hooks/useLookupCodes';
 import { useRouterFilter } from 'hooks/useRouterFilter';
 import { fill, intersection, isEmpty, keys, noop, pick, range } from 'lodash';
-import queryString from 'query-string';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Button, Container } from 'react-bootstrap';
 import { FaEdit, FaFileExport, FaFolder, FaFolderOpen } from 'react-icons/fa';
@@ -38,21 +37,29 @@ import download from 'utils/download';
 import * as Yup from 'yup';
 
 import { PropertyTypeNames } from '../../../constants/propertyTypeNames';
-import { PropertyFilter } from '../filter';
 import { IPropertyFilter } from '../filter/IPropertyFilter';
+import { PropertyFilter } from '../filter/PropertyFilter';
 import service from '../service';
 import { IProperty, IPropertyQueryParams } from '.';
 import { Buildings } from './buildings';
 import { buildingColumns as buildingCols, columns as cols } from './columns';
 import { toApiProperty } from './toApiProperty';
 
-const getPropertyReportUrl = (filter: IPropertyQueryParams) =>
-  `${ENVIRONMENT.apiUrl}/reports/properties?${filter ? queryString.stringify(filter) : ''}`;
+const getPropertyReportUrl = (filter: IPropertyQueryParams) => {
+  const queryParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(filter ?? {})) {
+    queryParams.set(key, String(value));
+  }
+  return `${ENVIRONMENT.apiUrl}/reports/properties?${queryParams.toString()}`;
+};
 
-const getAllFieldsPropertyReportUrl = (filter: IPropertyQueryParams) =>
-  `${ENVIRONMENT.apiUrl}/reports/properties/all/fields?${
-    filter ? queryString.stringify(filter) : ''
-  }`;
+const getAllFieldsPropertyReportUrl = (filter: IPropertyQueryParams) => {
+  const queryParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(filter ?? {})) {
+    queryParams.set(key, String(value));
+  }
+  return `${ENVIRONMENT.apiUrl}/reports/properties/all/fields?${queryParams.toString()}`;
+};
 
 const FileIcon = styled(Button)`
   background-color: #fff !important;
@@ -124,10 +131,12 @@ export const flattenParcel = (apiProperty: IParcel): IProperty => {
     classification: apiProperty.classification ?? '',
     classificationId: apiProperty.classificationId,
     addressId: apiProperty.address?.id as number,
-    address: `${apiProperty.address?.line1 ?? ''} , ${apiProperty.address?.administrativeArea ??
-      ''}`,
+    address: `${apiProperty.address?.line1 ?? ''} , ${
+      apiProperty.address?.administrativeArea ?? ''
+    }`,
     administrativeArea: apiProperty.address?.administrativeArea ?? '',
-    province: apiProperty.address?.province ?? '',
+    province: apiProperty.address?.province,
+    provinceId: apiProperty.address?.province ?? '',
     postal: apiProperty.address?.postal ?? '',
     assessedLand: (assessedLand?.value as number) ?? 0,
     assessedLandDate: assessedLand?.date,
@@ -167,10 +176,12 @@ export const flattenBuilding = (apiProperty: IBuilding): IProperty => {
     classification: apiProperty.classification ?? '',
     classificationId: apiProperty.classificationId,
     addressId: apiProperty.address?.id as number,
-    address: `${apiProperty.address?.line1 ?? ''} , ${apiProperty.address?.administrativeArea ??
-      ''}`,
+    address: `${apiProperty.address?.line1 ?? ''} , ${
+      apiProperty.address?.administrativeArea ?? ''
+    }`,
     administrativeArea: apiProperty.address?.administrativeArea ?? '',
-    province: apiProperty.address?.province ?? '',
+    province: apiProperty.address?.province,
+    provinceId: apiProperty.address?.province ?? '',
     postal: apiProperty.address?.postal ?? '',
     assessedBuilding: (assessedBuilding?.value as number) ?? 0,
     assessedBuildingDate: assessedBuilding?.date,
@@ -254,6 +265,7 @@ interface IChangedRow {
   assessedLand?: boolean;
   assessedBuilding?: boolean;
   netBook?: boolean;
+  classificationId: number;
 }
 
 /**
@@ -267,7 +279,7 @@ const DirtyRowsTracker: React.FC<{ setDirtyRows: (changes: IChangedRow[]) => voi
 
   React.useEffect(() => {
     if (!!touched && !isEmpty(touched) && !isSubmitting) {
-      const changed = Object.keys(getIn(touched, 'properties')).map(key => ({
+      const changed = Object.keys(getIn(touched, 'properties')).map((key) => ({
         rowId: Number(key),
         ...getIn(touched, 'properties')[key],
       }));
@@ -294,22 +306,24 @@ const PropertyListView: React.FC = () => {
   );
   const agencies = useMemo(() => lookupCodes.getByType(API.AGENCY_CODE_SET_NAME), [lookupCodes]);
 
-  const agenciesList = agencies.filter(a => !a.parentId).map(mapLookupCode);
-  const subAgencies = agencies.filter(a => !!a.parentId).map(mapLookupCode);
+  const agenciesList = agencies.filter((a) => !a.parentId).map(mapLookupCode);
+  const subAgencies = agencies.filter((a) => !!a.parentId).map(mapLookupCode);
 
-  const propertyClassifications = useMemo(() => lookupCodes.getPropertyClassificationOptions(), [
-    lookupCodes,
-  ]);
+  const propertyClassifications = useMemo(
+    () => lookupCodes.getPropertyClassificationOptions(),
+    [lookupCodes],
+  );
   const administrativeAreas = useMemo(
     () => lookupCodes.getByType(API.AMINISTRATIVE_AREA_CODE_SET_NAME),
     [lookupCodes],
   );
 
-  const agencyIds = useMemo(() => agencies.map(x => parseInt(x.id, 10)), [agencies]);
+  const agencyIds = useMemo(() => agencies.map((x) => parseInt(x.id, 10)), [agencies]);
   const [sorting, setSorting] = useState<TableSort<IProperty>>({ description: 'asc' });
 
   // We'll start our table without any data
   const [data, setData] = useState<IProperty[] | undefined>();
+
   // For getting the buildings on parcel folder click
   const [expandData, setExpandData] = useState<any>({});
 
@@ -383,12 +397,14 @@ const PropertyListView: React.FC = () => {
       schema: 'iglu:ca.bc.gov.pims/search/jsonschema/1-0-0',
       data: {
         view: 'property_inventory',
-        agency: data.agencies ?? '',
+        agency: lookupCodes.getAgencyFullNameById(Number(data.agencies[0])) ?? '',
         location: data.administrativeArea ?? '',
         address: data.address ?? '',
         pid_pin: data.pid ?? '',
         property_name: data.name ?? '',
-        classification: data.classificationId ?? '',
+        classification: data.classificationId
+          ? lookupCodes.getClassificationNameById(Number(data.classificationId))
+          : '',
       },
     });
 
@@ -490,7 +506,7 @@ const PropertyListView: React.FC = () => {
   const loadBuildings = async (expandedRows: IProperty[]) => {
     if (expandedRows.length > 0) {
       await Promise.all(
-        expandedRows.map(async property => {
+        expandedRows.map(async (property) => {
           if (property.propertyTypeId === 0) {
             if (expandData[property.id] === undefined) {
               setExpandData({
@@ -507,7 +523,7 @@ const PropertyListView: React.FC = () => {
   const changePropertyType = (type: PropertyTypeNames) => {
     setPropertyType(type);
     setPageIndex(0);
-    setFilter(state => {
+    setFilter((state) => {
       return {
         ...state,
         propertyType: type,
@@ -520,60 +536,70 @@ const PropertyListView: React.FC = () => {
     const agencySelections = agencies.map(mapLookupCode);
     appliedFilter.agencies = filter.agencies
       .split(',')
-      .map(value => agencySelections.find(agency => agency.value === value) || '') as any;
+      .map((value) => agencySelections.find((agency) => agency.value === value) || '') as any;
   }
 
-  const onRowClick = useCallback((row: IProperty) => {
-    // Track row click in Snowplow Analytics.
-    window.snowplow('trackSelfDescribingEvent', {
-      schema: 'iglu:ca.bc.gov.pims/listing_click/jsonschema/1-0-0',
-      data: {
-        view: 'property_inventory',
-        property_name: row.name ?? '',
-        pid: row.pid ?? '',
-        pin: row.pin ?? '',
-        agency: row.subAgency ?? row.agency ?? '',
-        classification: row.classification ?? '',
-      },
-    });
+  const onRowClick = useCallback(
+    (row: IProperty) => {
+      // Track row click in Snowplow Analytics.
+      window.snowplow('trackSelfDescribingEvent', {
+        schema: 'iglu:ca.bc.gov.pims/listing_click/jsonschema/1-0-0',
+        data: {
+          view: 'property_inventory',
+          property_name: row.name ?? '',
+          pid: row.pid ?? '',
+          pin: row.pin ?? '',
+          agency: row.subAgency ?? row.agency ?? '',
+          classification: row.classification ?? '',
+        },
+      });
 
-    navigate(
-      `/mapview?${queryString.stringify({
-        sidebar: true,
-        disabled: true,
-        loadDraft: false,
-        parcelId: [PropertyTypes.PARCEL, PropertyTypes.SUBDIVISION].includes(row.propertyTypeId)
-          ? row.id
-          : undefined,
-        buildingId: row.propertyTypeId === PropertyTypes.BUILDING ? row.id : undefined,
-      })}`,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      const queryParams = new URLSearchParams();
+      queryParams.set('sidebar', 'true');
+      queryParams.set('disabled', 'true');
+      queryParams.set('loadDraft', 'false');
+      queryParams.set(
+        'buildingId',
+        `${row.propertyTypeId === PropertyTypes.BUILDING ? row.id : undefined}`,
+      );
+      queryParams.set(
+        'parcelId',
+        `${
+          [PropertyTypes.PARCEL, PropertyTypes.SUBDIVISION].includes(row.propertyTypeId)
+            ? row.id
+            : undefined
+        }`,
+      );
+      navigate({
+        pathname: '/mapview',
+        search: queryParams.toString(),
+      });
+    },
+    [navigate],
+  );
 
   const submitTableChanges = async (
     values: { properties: IProperty[] },
     actions: FormikProps<{ properties: IProperty[] }>,
   ) => {
     let nextProperties = [...values.properties];
-    const editableColumnKeys = ['assessedLand', 'assessedBuilding', 'netBook'];
-
+    const editableColumnKeys = ['assessedLand', 'assessedBuilding', 'netBook', 'classificationId'];
     const changedRows = dirtyRows
-      .map(change => {
+      .map((change) => {
         const data = { ...values.properties![change.rowId] };
         return { data, ...change } as any;
       })
-      .filter(c => intersection(keys(c), editableColumnKeys).length > 0);
+      .filter((c) => intersection(keys(c), editableColumnKeys).length > 0);
 
-    let errors: any[] = fill(range(nextProperties.length), undefined);
-    let touched: any[] = fill(range(nextProperties.length), undefined);
+    const errors: any[] = fill(range(nextProperties.length), undefined);
+    const touched: any[] = fill(range(nextProperties.length), undefined);
     if (changedRows.length > 0) {
-      const changedRowIds = changedRows.map(x => x.rowId);
+      const changedRowIds = changedRows.map((x) => x.rowId);
       // Manually validate the table form
       const currentErrors = await actions.validateForm();
       const errorRowIds = keys(currentErrors.properties)
         .map(Number)
-        .filter(i => !!currentErrors.properties![i]);
+        .filter((i) => !!currentErrors.properties![i]);
       const foundRowErrorsIndexes = intersection(changedRowIds, errorRowIds);
       if (foundRowErrorsIndexes.length > 0) {
         for (const index of foundRowErrorsIndexes) {
@@ -605,13 +631,15 @@ const PropertyListView: React.FC = () => {
             toast.info(
               `Successfully saved changes for ${apiProperty.name || apiProperty.address?.line1}`,
             );
+            setEditable(false);
           } catch (error) {
             const errorMessage = (error as Error).message;
 
             touched[change.rowId] = pick(change, ['assessedLand', 'netBook']);
             toast.error(
-              `Failed to save changes for ${apiProperty.name ||
-                apiProperty.address?.line1}. ${errorMessage}`,
+              `Failed to save changes for ${
+                apiProperty.name || apiProperty.address?.line1
+              }. ${errorMessage}`,
             );
             errors[change.rowId] = {
               assessedLand: change.assessedland && (errorMessage || 'Save request failed.'),
@@ -622,7 +650,7 @@ const PropertyListView: React.FC = () => {
       }
 
       setDirtyRows([]);
-      if (!errors.find(x => !!x)) {
+      if (!errors.find((x) => !!x)) {
         actions.setTouched({ properties: [] });
         setData(nextProperties);
         actions.resetForm({ values: { properties: nextProperties } });
@@ -705,10 +733,11 @@ const PropertyListView: React.FC = () => {
               </FileIcon>
             </TooltipWrapper>
           )}
+
           <VerticalDivider />
 
           {!editable && !keycloak.hasClaim(Claims.VIEW_ONLY_PROPERTIES) && (
-            <TooltipWrapper toolTipId="edit-financial-values" toolTip={'Edit financial values'}>
+            <TooltipWrapper toolTipId="edit-values" toolTip={'Edit values'}>
               <EditIconButton>
                 <FaEdit data-testid="edit-icon" size={36} onClick={() => setEditable(!editable)} />
               </EditIconButton>
@@ -716,10 +745,7 @@ const PropertyListView: React.FC = () => {
           )}
           {editable && (
             <>
-              <TooltipWrapper
-                toolTipId="cancel-edited-financial-values"
-                toolTip={'Cancel unsaved edits'}
-              >
+              <TooltipWrapper toolTipId="cancel-edited-values" toolTip={'Cancel unsaved edits'}>
                 <Button
                   data-testid="cancel-changes"
                   variant="outline-primary"
@@ -734,10 +760,7 @@ const PropertyListView: React.FC = () => {
                   Cancel
                 </Button>
               </TooltipWrapper>
-              <TooltipWrapper
-                toolTipId="save-edited-financial-values"
-                toolTip={'Save financial values'}
-              >
+              <TooltipWrapper toolTipId="save-edited-values" toolTip={'Save values'}>
                 <Button
                   data-testid="save-changes"
                   onClick={async () => {
@@ -755,7 +778,7 @@ const PropertyListView: React.FC = () => {
           )}
         </Container>
 
-        <Table<IProperty>
+        <Table<IProperty, any>
           name="propertiesTable"
           lockPageSize={true}
           columns={isParcel ? parcelColumns : buildingColumns}
@@ -789,7 +812,7 @@ const PropertyListView: React.FC = () => {
             }
           }}
           detailsPanel={{
-            render: val => {
+            render: (val) => {
               if (expandData[val.id]) {
                 return (
                   <Buildings
@@ -805,21 +828,21 @@ const PropertyListView: React.FC = () => {
               open: <FaFolderOpen color="black" size={20} />,
               closed: <FaFolder color="black" size={20} />,
             },
-            checkExpanded: (row, state) => !!state.find(x => checkExpanded(x, row)),
+            checkExpanded: (row, state) => !!state.find((x) => checkExpanded(x, row)),
             onExpand: loadBuildings,
-            getRowId: row => row.id,
+            getRowId: (row) => row.id,
           }}
           filter={appliedFilter}
-          onFilterChange={values => {
+          onFilterChange={(values) => {
             setFilter({ ...filter, ...values });
           }}
           renderBodyComponent={({ body }) => (
             <Formik
               innerRef={tableFormRef as any}
               initialValues={{ properties: data || [] }}
-              validationSchema={Yup.object().shape({
+              validationSchema={Yup.object({
                 properties: Yup.array().of(
-                  Yup.object().shape({
+                  Yup.object({
                     netBook: Yup.number()
                       .min(0, 'Minimum value is $0')
                       .max(1000000000, 'Maximum value is $1,000,000,000')

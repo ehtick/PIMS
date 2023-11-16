@@ -15,9 +15,10 @@ import * as styled from './styled';
 import { toForm, toModel } from './utils';
 import { useProjectValidation } from './validation';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IDisposalProjectProps {}
 
-export const DisposalProject: React.FC<IDisposalProjectProps> = props => {
+export const DisposalProject: React.FC<IDisposalProjectProps> = () => {
   const api = useProjectDisposal();
   const [state, store] = useProjectStore();
   const location = useLocation();
@@ -42,15 +43,14 @@ export const DisposalProject: React.FC<IDisposalProjectProps> = props => {
         console.error(error); // TODO: Handle error.
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [api],
   );
 
   React.useEffect(() => {
-    if (!!id && values.id !== id) {
+    if ((!!id && values.id !== id) || project === undefined) {
       fetch(id);
     }
-  }, [id, values.id, fetch]);
+  }, [id, values.id, fetch, project]);
 
   const updateProject = async (values: IProjectForm) => {
     setIsSubmitting(true);

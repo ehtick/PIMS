@@ -34,12 +34,15 @@ function setup(ui = <Template />, setMap = noop) {
 
 function isLayerVisible(key: string, leaflet: any) {
   return Object.keys(leaflet._layers)
-    .map(k => leaflet._layers[k])
-    .map(x => x.options)
-    .find(options => options?.key === key);
+    .map((k) => leaflet._layers[k])
+    .map((x) => x.options)
+    .find((options) => options?.key === key);
 }
 
 describe('LayersControl View', () => {
+  beforeAll(() => {
+    (global as any).IS_REACT_ACT_ENVIRONMENT = false;
+  });
   afterEach(cleanup);
 
   it('renders correctly', () => {
@@ -96,6 +99,7 @@ describe('LayersControl View', () => {
     const { ready } = setup(<Template />, setMap);
     await waitFor(() => ready);
     await waitFor(() => expect(mapInstance).toBeDefined());
+
     expect(isLayerVisible('parcelBoundaries', mapInstance)).toBeDefined();
     expect(isLayerVisible('municipalities', mapInstance)).toBeUndefined();
   });

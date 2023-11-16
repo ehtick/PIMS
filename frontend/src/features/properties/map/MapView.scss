@@ -34,9 +34,12 @@ $narrowSidebarSize: 700px;
   transition: margin 1s;
 }
 .map {
-  transition: margin 1s, width 1s;
+  transition:
+    margin 1s,
+    width 1s;
   margin-left: 0px;
   position: relative;
+  height: 100%;
 }
 .side-bar .map {
   margin-left: 930px;
@@ -48,6 +51,7 @@ $narrowSidebarSize: 700px;
   }
 }
 .side-bar {
+  height: 100%;
   .map-side-drawer {
     margin-left: 0px;
     .scroll {
@@ -56,7 +60,7 @@ $narrowSidebarSize: 700px;
     }
   }
   .map .leaflet-container {
-    height: calc(100vh - #{$header-height} - #{$navbar-height} - #{$footer-height});
+    height: 100%;
   }
   .map-filter-container {
     margin-bottom: -#{$mapfilter-height};
@@ -65,6 +69,9 @@ $narrowSidebarSize: 700px;
   .map .active-selected.leaflet-marker-icon {
     animation: blink 1.25s ease-in infinite;
   }
+}
+.full-height {
+  height: 100%;
 }
 
 @keyframes blink {
@@ -80,13 +87,17 @@ $narrowSidebarSize: 700px;
 .parcel-cursor,
 .parcel-cursor .map .leaflet-container.leaflet-grab,
 .parcel-cursor .map .leaflet-container.leaflet-grab .leaflet-interactive {
-  cursor: url('../../../assets/images/pins/marker-icon-1x-green.png') 12.5 41, default;
+  cursor:
+    url('../../../assets/images/pins/marker-icon-1x-green.png') 12.5 41,
+    default;
 }
 
 .building-cursor,
 .building-cursor .map .leaflet-container.leaflet-grab,
 .building-cursor .map .leaflet-container.leaflet-grab .leaflet-interactive {
-  cursor: url('../../../assets/images/pins/marker-icon-1x-blue.png') 12.5 41, default;
+  cursor:
+    url('../../../assets/images/pins/marker-icon-1x-blue.png') 12.5 41,
+    default;
 }
 
 .map .leaflet-marker-icon.leaflet-interactive div,

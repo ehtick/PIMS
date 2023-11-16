@@ -32,7 +32,7 @@ const DraftMarkerButton = styled.button`
   display: flex;
 `;
 
-const LatLongForm = <T extends any>(props: LatLongFormProps & FormikProps<T>) => {
+const LatLongForm = <T,>(props: LatLongFormProps & FormikProps<T>) => {
   const withNameSpace: Function = useCallback(
     (fieldName: string) => {
       return props.nameSpace ? `${props.nameSpace}.${fieldName}` : fieldName;
@@ -47,16 +47,14 @@ const LatLongForm = <T extends any>(props: LatLongFormProps & FormikProps<T>) =>
           <div className="instruction" style={{ display: 'flex' }}>
             {props.building && (
               <p>
-                Click on the pin, and then click your desired location on the map to mark the
-                location of this building, or if you already have the coordinates, you can enter
-                them in the fields below.
+                Click your desired location on the map to mark the location of this building, or if
+                you already have the coordinates, you can enter them in the fields below.
               </p>
             )}
             {!props.building && (
               <p>
-                Click on the pin, and then click your desired location on the map to pull the parcel
-                details. Or if you already have the coordinates, you can enter them manually in the
-                fields below.
+                Click your desired location on the map to pull the parcel details. Or if you already
+                have the coordinates, you can enter them manually in the fields below.
               </p>
             )}
           </div>
@@ -80,10 +78,10 @@ const LatLongForm = <T extends any>(props: LatLongFormProps & FormikProps<T>) =>
         </Col>
       </Row>
       <Row>
-        <Col md="auto">
+        <Col xs={3}>
           <Label>Latitude</Label>
         </Col>
-        <Col md="auto">
+        <Col>
           <FastInput
             className="input-medium"
             displayErrorTooltips
@@ -96,10 +94,10 @@ const LatLongForm = <T extends any>(props: LatLongFormProps & FormikProps<T>) =>
         </Col>
       </Row>
       <Row>
-        <Col md="auto">
+        <Col xs={3}>
           <Label>Longitude</Label>
         </Col>
-        <Col md="auto">
+        <Col>
           <FastInput
             className="input-medium"
             displayErrorTooltips

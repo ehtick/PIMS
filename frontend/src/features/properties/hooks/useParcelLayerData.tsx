@@ -13,6 +13,8 @@ import { clearParcelLayerData, IParcelLayerData } from 'store/slices/parcelLayer
 import { isMouseEventRecent, squareMetersToHectares } from 'utils';
 
 import { pidFormatter } from '../components/forms/subforms/PidPinForm';
+import { ILTSAOrderModel } from 'actions/parcelsActions';
+import { useApi } from 'hooks/useApi';
 
 interface IUseParcelLayerDataProps {
   formikRef: React.MutableRefObject<FormikValues | undefined>;
@@ -57,6 +59,7 @@ const setParcelFieldsFromLayerData = (
   administrativeAreas: ILookupCode[],
   nameSpace: string,
   agencyId?: number,
+  ltsa?: ILTSAOrderModel,
 ) => {
   if (isFormInStateToSetLayerData(layerData, formikRef, nameSpace)) {
     toast.dark('Autofilling form utilizing BC Geographic Warehouse data.', { autoClose: 7000 });
@@ -76,6 +79,11 @@ const setParcelFieldsFromLayerData = (
       newValues,
       `${nameSpace}.landArea`,
       squareMetersToHectares(+layerParcelData.FEATURE_AREA_SQM),
+    );
+    newValues = setIn(
+      newValues,
+      `${nameSpace}.landLegalDescription`,
+      ltsa?.order.orderedProduct.fieldedData.descriptionsOfLand[0].fullLegalDescription ?? '',
     );
     newValues = setIn(newValues, `${nameSpace}.latitude`, layerParcelData.CENTER.lat);
     newValues = setIn(newValues, `${nameSpace}.longitude`, layerParcelData.CENTER.lng);
@@ -99,20 +107,14 @@ const setParcelFieldsFromLayerData = (
 
       newValues = setIn(newValues, `${nameSpace}.agencyId`, agencyId);
       const searchAddress = getIn(values, `${nameSpace}.searchAddress`);
-      if (searchAddress && getIn(newValues, `${nameSpace}.address.line1`) === '') {
+      if (searchAddress) {
         newValues = setIn(newValues, `${nameSpace}.address.line1`, searchAddress);
+      } else {
+        newValues = setIn(newValues, `${nameSpace}.address.line1`, '');
       }
-      newValues = setIn(
-        newValues,
-        `${nameSpace}.searchPin`,
-        getIn(values, `${nameSpace}.searchPin`),
-      );
-      newValues = setIn(
-        newValues,
-        `${nameSpace}.searchPid`,
-        getIn(values, `${nameSpace}.searchPid`),
-      );
-      newValues = setIn(newValues, `${nameSpace}.searchAddress`, searchAddress);
+      newValues = setIn(newValues, `${nameSpace}.searchPin`, '');
+      newValues = setIn(newValues, `${nameSpace}.searchPid`, '');
+      newValues = setIn(newValues, `${nameSpace}.searchAddress`, '');
     }
     setValues({ ...values, ...newValues });
   }
@@ -127,7 +129,7 @@ const getAdminAreaFromLayerData = (
   administrativeAreas: ILookupCode[],
   layerMunicipality: string,
 ) => {
-  let administrativeArea = _.find(administrativeAreas, { name: layerMunicipality });
+  const administrativeArea = _.find(administrativeAreas, { name: layerMunicipality });
   if (administrativeArea) {
     return administrativeArea;
   }
@@ -153,27 +155,42 @@ const useParcelLayerData = ({
   nameSpace,
   agencyId,
 }: IUseParcelLayerDataProps) => {
-  const parcelLayerData = useAppSelector(store => store.parcelLayerData?.parcelLayerData);
+const api = useApi();
+  const parcelLayerData = useAppSelector((store) => store.parcelLayerData?.parcelLayerData);
   const { getByType } = useCodeLookups();
   const [showOverwriteDialog, setShowOverwriteDialog] = useState(false);
   const dispatch = useAppDispatch();
   const keycloak = useKeycloakWrapper();
 
   useDeepCompareEffect(() => {
-    if (!!formikRef?.current && isMouseEventRecent(parcelLayerData?.e) && !!parcelLayerData?.data) {
-      if (!parcelId) {
-        setParcelFieldsFromLayerData(
-          parcelLayerData,
-          formikRef,
-          getByType(AMINISTRATIVE_AREA_CODE_SET_NAME),
-          nameSpace ?? '',
-          agencyId ?? keycloak.agencyId,
-        );
-        dispatch(clearParcelLayerData());
-      } else {
-        setShowOverwriteDialog(true);
+    // Define an async function to fetch LTSA data
+    const fetchLTSAData = async () => {
+      if (
+        !!formikRef?.current &&
+        isMouseEventRecent(parcelLayerData?.e) &&
+        !!parcelLayerData?.data
+      ) {
+        if (!parcelId) {
+          const pid = parcelLayerData?.data?.PID || parcelLayerData?.data?.PID_NUMBER?.toString();
+          const ltsaResponseData = await api.getLTSA(pid);
+          // Now that LTSA data is available, call setParcelFieldsFromLayerData
+          setParcelFieldsFromLayerData(
+            parcelLayerData,
+            formikRef,
+            getByType(AMINISTRATIVE_AREA_CODE_SET_NAME),
+            nameSpace ?? '',
+            agencyId ?? keycloak.agencyId,
+            ltsaResponseData,
+          );
+          dispatch(clearParcelLayerData());
+        } else {
+          setShowOverwriteDialog(true);
+        }
       }
-    }
+    };
+
+    // Call the async function
+    fetchLTSAData();
   }, [formikRef, getByType, parcelId, parcelLayerData]);
 
   return {

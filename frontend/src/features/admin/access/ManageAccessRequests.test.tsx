@@ -54,7 +54,7 @@ const accessRequests = {
 Enzyme.configure({ adapter: new Adapter() });
 
 const history = createMemoryHistory();
-history.push('admin');
+history.push('/admin');
 const mockStore = configureMockStore([thunk]);
 
 const lCodes = {
@@ -86,7 +86,7 @@ const successStore = mockStore({
 });
 
 const componentRender = (store: any) => {
-  let component = create(
+  const component = create(
     <Formik initialValues={{}} onSubmit={noop}>
       <MemoryRouter initialEntries={[history.location]}>
         <Provider store={store}>

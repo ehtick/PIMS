@@ -1,10 +1,10 @@
 ARG BUILD_CONFIGURATION=Release
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
 EXPOSE 443 8080
 
 # Copy csproj and restore as distinct layers
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY *.sln .
 COPY api/*.csproj api/
@@ -19,10 +19,11 @@ COPY geocoder/*.csproj geocoder/
 COPY ches/*.csproj ches/
 COPY notifications/*.csproj notifications/
 COPY core/*.csproj core/
+COPY ltsa/*.csproj ltsa/
 
 RUN dotnet restore
 ENV PATH="$PATH:/root/.dotnet/tools"
-RUN dotnet tool install --global dotnet-ef --version 6.0.15
+RUN dotnet tool install --global dotnet-ef --version 7.0.5
 # Copy everything else and build
 COPY . .
 WORKDIR /src/api

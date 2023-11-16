@@ -25,7 +25,7 @@ const Header = () => {
   const location = useLocation();
   const keycloak = useKeycloakWrapper();
   const network = useNetworkStore();
-  const { requests } = useAppSelector(store => store.network);
+  const { requests } = useAppSelector((store) => store.network);
 
   // Change styling based on environment
   let environment = 'production';
@@ -35,14 +35,11 @@ const Header = () => {
 
   const [errors, setErrors] = React.useState<IGenericNetworkAction[]>([]);
 
-  if (location.pathname === '/') {
-    navigate('/mapview', { replace: true });
-  }
   const [show, setShow] = useState(false);
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
   const handleClear = () => {
-    errors.forEach(error => network.clearRequest(error.name));
+    errors.forEach((error) => network.clearRequest(error.name));
     setShow(false);
   };
 
@@ -50,10 +47,16 @@ const Header = () => {
     (x as IGenericNetworkAction).type === 'ERROR';
 
   React.useEffect(() => {
+    if (location.pathname === '/') {
+      navigate('/mapview', { replace: true });
+    }
+  }, []);
+
+  React.useEffect(() => {
     const errors: IGenericNetworkAction[] = Object.values(requests)
-      .filter(o => o instanceof Object)
-      .filter(o => isNetworkError(o))
-      .map(o => o as IGenericNetworkAction);
+      .filter((o) => o instanceof Object)
+      .filter((o) => isNetworkError(o))
+      .map((o) => o as IGenericNetworkAction);
     setErrors(errors);
   }, [requests]);
 

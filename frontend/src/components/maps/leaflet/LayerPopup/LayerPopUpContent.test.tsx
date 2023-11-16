@@ -1,8 +1,6 @@
 import { cleanup, render } from '@testing-library/react';
-import { SidebarContextType } from 'features/mapSideBar/hooks/useQueryParamSideBar';
 import { createMemoryHistory } from 'history';
 import { LatLng, LatLngBounds } from 'leaflet';
-import queryString from 'query-string';
 import React from 'react';
 import { MapContainer } from 'react-leaflet';
 import { MemoryRouter } from 'react-router-dom';
@@ -63,8 +61,8 @@ describe('Layer Popup Content', () => {
     expect(tree).toMatchSnapshot();
   });
 
-  it('Populate details link does not appear on default', () => {
-    const { queryByText } = render(
+  it('Contains LTSA link', () => {
+    const tree = (
       <MemoryRouter initialEntries={[history.location]}>
         <MapContainer>
           <LayerPopupContent
@@ -74,50 +72,10 @@ describe('Layer Popup Content', () => {
             bounds={bounds}
           />
         </MapContainer>
-      </MemoryRouter>,
+      </MemoryRouter>
     );
-    const link = queryByText(/Populate property details/i);
-    expect(link).toBeNull();
-  });
-
-  it('Populate details link appears when sideBar open', () => {
-    history.push(
-      `/mapview?${queryString.stringify({
-        disabled: false,
-        loadDraft: false,
-        sidebar: true,
-        sidebarContext: SidebarContextType.ADD_BUILDING,
-      })}`,
-    );
-    const { getByText } = render(
-      <MemoryRouter initialEntries={[history.location]}>
-        <MapContainer>
-          <LayerPopupContent
-            data={mockLayer.data}
-            config={mockLayer.config}
-            onAddToParcel={mockLayer.onAddToParcel}
-            bounds={bounds}
-          />
-        </MapContainer>
-      </MemoryRouter>,
-    );
-    const link = getByText(/Populate property details/i);
-    expect(link).toBeInTheDocument();
-  });
-
-  xit('Zoom link does not appear without bounds', () => {
-    const { queryByText } = render(
-      <MemoryRouter initialEntries={[history.location]}>
-        <MapContainer>
-          <LayerPopupContent
-            data={mockLayer.data}
-            config={mockLayer.config}
-            onAddToParcel={mockLayer.onAddToParcel}
-          />
-        </MapContainer>
-      </MemoryRouter>,
-    );
-    const link = queryByText(/Zoom/i);
-    expect(link).toBeNull();
+    const { container } = render(tree);
+    const ltsaLink = container.innerHTML.includes('LTSA Info');
+    expect(ltsaLink).toBe(true);
   });
 });

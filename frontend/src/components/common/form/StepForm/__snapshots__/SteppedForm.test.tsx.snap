@@ -6,12 +6,12 @@ exports[`SteppedForm component renders correctly 1`] = `
   display: none;
 }
 
-.c0 .nav-tabs > .nav-item:last-child {
+.c0 .nav-tabs>.nav-item:last-child {
   border: 0;
   padding: 0;
 }
 
-.c0 .nav-tabs > .nav-item:last-child svg {
+.c0 .nav-tabs>.nav-item:last-child svg {
   position: relative;
   color: white;
 }
@@ -41,9 +41,6 @@ exports[`SteppedForm component renders correctly 1`] = `
   background-color: white;
   color: black;
   position: relative;
-  display: -webkit-inline-box;
-  display: -webkit-inline-flex;
-  display: -ms-inline-flexbox;
   display: inline-flex;
   position: relative;
 }
@@ -122,21 +119,9 @@ exports[`SteppedForm component renders correctly 1`] = `
       >
         <div>
           <div
-            class="primary"
+            style="color: black;"
           >
-            <svg
-              fill="currentColor"
-              height="20"
-              stroke="currentColor"
-              stroke-width="0"
-              viewBox="0 0 448 512"
-              width="20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M416 208H272V64c0-17.67-14.33-32-32-32h-32c-17.67 0-32 14.33-32 32v144H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h144v144c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32V304h144c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"
-              />
-            </svg>
+            Add another associated Parcel
           </div>
         </div>
       </button>
@@ -275,21 +260,16 @@ exports[`SteppedForm component renders correctly 1`] = `
         class="container"
       >
         <div
-          class="row"
-          controlid="input-data.name"
-          style="align-items: center;"
+          class="input-flex"
+          id="input-data.name"
         >
-          <div
-            class="col-md-auto"
-          >
-            <div>
-              <input
-                class="form-control"
-                name="data.name"
-                placeholder="Name"
-                value="Quartech HQ"
-              />
-            </div>
+          <div>
+            <input
+              class="form-control"
+              name="data.name"
+              placeholder="Name"
+              value="Quartech HQ"
+            />
           </div>
         </div>
         <p>

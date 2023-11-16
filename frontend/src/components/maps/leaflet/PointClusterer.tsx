@@ -8,7 +8,6 @@ import { useApi } from 'hooks/useApi';
 import useDeepCompareEffect from 'hooks/useDeepCompareEffect';
 import useKeycloakWrapper from 'hooks/useKeycloakWrapper';
 import L from 'leaflet';
-import queryString from 'query-string';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FeatureGroup, Marker, Polyline, useMap } from 'react-leaflet';
 import { useDispatch } from 'react-redux';
@@ -111,7 +110,9 @@ export const PointClusterer: React.FC<PointClustererProps> = ({
   const draftFeatureGroupRef = useRef<L.FeatureGroup>(null);
   const filterState = useFilterContext();
   const location = useLocation();
-  const { parcelId, buildingId } = queryString.parse(location.search);
+  const queryParams = new URLSearchParams(location.search);
+  const parcelId = queryParams.get('parcelId');
+  const buildingId = queryParams.get('buildingId');
 
   const [currentSelected, setCurrentSelected] = useState(selected);
   const [currentCluster, setCurrentCluster] = useState<
@@ -144,7 +145,7 @@ export const PointClusterer: React.FC<PointClustererProps> = ({
     try {
       const points =
         supercluster?.getLeaves(currentCluster?.properties?.cluster_id, Infinity) ?? [];
-      return points.map(p => p.properties.id);
+      return points.map((p) => p.properties.id);
     } catch (error) {
       return [];
     }
@@ -169,8 +170,8 @@ export const PointClusterer: React.FC<PointClustererProps> = ({
   const componentDidMount = useCallback(() => {
     if (!spiderfierRef.current) {
       spiderfierRef.current = new Spiderfier(mapInstance, {
-        getClusterId: cluster => cluster?.properties?.cluster_id as number,
-        getClusterPoints: clusterId => supercluster?.getLeaves(clusterId, Infinity) ?? [],
+        getClusterId: (cluster) => cluster?.properties?.cluster_id as number,
+        getClusterPoints: (clusterId) => supercluster?.getLeaves(clusterId, Infinity) ?? [],
         pointToLayer: pointToLayer,
       });
     }
@@ -262,7 +263,7 @@ export const PointClusterer: React.FC<PointClustererProps> = ({
       popUpContext.setLoading(true);
       if ([PropertyTypes.PARCEL, PropertyTypes.SUBDIVISION].includes(propertyTypeId)) {
         getParcel(id as number)
-          .then(parcel => {
+          .then((parcel) => {
             popUpContext.setPropertyInfo(parcel);
           })
           .catch(() => {
@@ -273,7 +274,7 @@ export const PointClusterer: React.FC<PointClustererProps> = ({
           });
       } else if (propertyTypeId === PropertyTypes.BUILDING) {
         getBuilding(id as number)
-          .then(building => {
+          .then((building) => {
             popUpContext.setPropertyInfo(building);
             if (!!building.parcels.length) {
               dispatch(
@@ -321,7 +322,7 @@ export const PointClusterer: React.FC<PointClustererProps> = ({
                 key={index}
                 position={[latitude, longitude]}
                 eventHandlers={{
-                  click: e => {
+                  click: (e) => {
                     zoomOrSpiderfy(cluster);
                     e.target.closePopup();
                   },
@@ -370,13 +371,13 @@ export const PointClusterer: React.FC<PointClustererProps> = ({
                       }),
                     );
                   }
-                  onMarkerClick(); //open information slideout
                   if (keycloak.canUserViewProperty(cluster.properties as IProperty)) {
                     fetchProperty(cluster.properties.propertyTypeId, cluster.properties.id);
                   } else {
                     popUpContext.setPropertyInfo(convertedProperty);
                   }
                   popUpContext.setPropertyTypeID(cluster.properties.propertyTypeId);
+                  onMarkerClick(); //open information slideout
                 },
               }}
             />
@@ -421,7 +422,6 @@ export const PointClusterer: React.FC<PointClustererProps> = ({
                     }),
                   );
                 }
-                onMarkerClick(); //open information slideout
                 if (keycloak.canUserViewProperty(m.properties as IProperty)) {
                   fetchProperty(m.properties.propertyTypeId, m.properties.id);
                 } else {
@@ -430,6 +430,7 @@ export const PointClusterer: React.FC<PointClustererProps> = ({
                   );
                 }
                 popUpContext.setPropertyTypeID(m.properties.propertyTypeId);
+                onMarkerClick(); //open information slideout
               },
             }}
           />

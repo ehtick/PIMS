@@ -1,6 +1,7 @@
 services:
   ####################### Database #######################
   database:
+    profiles: ['prod', 'dev']
     restart: 'no'
     container_name: pims-database
     build:
@@ -16,6 +17,7 @@ services:
 
   ####################### Backend #######################
   backend:
+    profiles: ['prod', 'dev']
     restart: 'no'
     container_name: pims-api
     build:
@@ -33,21 +35,43 @@ services:
 
   ####################### Frontend #######################
   frontend:
+    profiles: ['prod']
     stdin_open: true
     tty: true
     restart: 'no'
     container_name: pims-app
     build:
       context: frontend
-    volumes:
-      - ./frontend/src:/usr/app/src
-      - ./frontend/public:/usr/app/public
-      - pims-app-node-cache:/usr/app/node_modules
+      target: prod
+      dockerfile: Dockerfile
     ports:
       - ${APP_HTTP_PORT:-3000}:3000
     depends_on:
       - backend
-    env_file: ./frontend/.env
+    env_file: .env
+    networks:
+      - pims
+
+  ####################### Frontend Dev #######################
+  frontend-dev:
+    profiles: ['dev']
+    stdin_open: true
+    tty: true
+    restart: 'no'
+    container_name: pims-app-dev
+    build:
+      context: frontend
+      target: dev
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - pims-app-node-cache:/app/node_modules
+    ports:
+      - ${APP_HTTP_PORT:-3000}:3000
+    depends_on:
+      - backend
+    env_file: .env
     networks:
       - pims
 

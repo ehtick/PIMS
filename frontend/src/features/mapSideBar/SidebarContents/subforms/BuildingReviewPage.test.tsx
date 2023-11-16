@@ -11,6 +11,7 @@ import moment from 'moment';
 import pretty from 'pretty';
 import React from 'react';
 import { Provider } from 'react-redux';
+import * as Router from 'react-router';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
@@ -40,7 +41,7 @@ const form = (
     }}
     onSubmit={noop}
   >
-    {(props: any) => (
+    {() => (
       <Provider store={store}>
         <BuildingReviewPage
           classifications={[]}
@@ -54,6 +55,10 @@ const form = (
   </Formik>
 );
 describe('building review page', () => {
+  const navigate = jest.fn();
+  beforeEach(() => {
+    jest.spyOn(Router, 'useNavigate').mockImplementation(() => navigate);
+  });
   it('renders correctly', () => {
     const { container } = render(form);
     expect(pretty(container.innerHTML)).toMatchSnapshot();
@@ -64,8 +69,6 @@ describe('building review page', () => {
 
     const agency = container.querySelector('input[name="agencyId"]');
     const name = container.querySelector('input[name="name"]');
-    const addr = container.querySelector('input[name="address.line1"]');
-    const loc = container.querySelector('input[name="address.administrativeArea"]');
     const lat = container.querySelector('input[name="latitude"]');
     const long = container.querySelector('input[name="longitude"]');
     const classificationId = container.querySelector('select[name="classificationId"]');
@@ -76,8 +79,6 @@ describe('building review page', () => {
 
     expect(agency).toBeDisabled();
     expect(name).toBeDisabled();
-    expect(addr).toBeDisabled();
-    expect(loc).toBeDisabled();
     expect(lat).toBeDisabled();
     expect(long).toBeDisabled();
     expect(classificationId).toBeDisabled();
@@ -92,8 +93,6 @@ describe('building review page', () => {
 
     const agency = container.querySelector('input[name="agencyId"]');
     const name = container.querySelector('input[name="name"]');
-    const addr = container.querySelector('input[name="address.line1"]');
-    const loc = container.querySelector('input[name="address.administrativeArea"]');
     const lat = container.querySelector('input[name="latitude"]');
     const long = container.querySelector('input[name="longitude"]');
     const classificationId = container.querySelector('select[name="classificationId"]');
@@ -107,8 +106,6 @@ describe('building review page', () => {
 
     expect(agency).toBeDisabled();
     expect(name).not.toBeDisabled();
-    expect(addr).toBeDisabled();
-    expect(loc).toBeDisabled();
     expect(lat).toBeDisabled();
     expect(long).toBeDisabled();
     expect(classificationId).not.toBeDisabled();

@@ -7,18 +7,11 @@ using Pims.Dal.Security;
 using Pims.Dal.Services.Admin;
 using Swashbuckle.AspNetCore.Annotations;
 using System;
-using System.ComponentModel;
 using EModel = Pims.Dal.Entities.Models;
 using Entity = Pims.Dal.Entities;
 using Model = Pims.Api.Areas.Admin.Models.User;
 using GoldModel = Pims.Api.Areas.Admin.Models.GoldUser;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Microsoft.AspNetCore.Http;
 
 namespace Pims.Api.Areas.Admin.Controllers
 {
@@ -37,7 +30,7 @@ namespace Pims.Api.Areas.Admin.Controllers
         private readonly ILogger<UserController> _logger;
         private readonly IPimsAdminService _pimsAdminService;
         private readonly IMapper _mapper;
-        private object res;
+        private readonly object res;
         #endregion
 
         #region Constructors
@@ -73,7 +66,7 @@ namespace Pims.Api.Areas.Admin.Controllers
         }
 
         /// <summary>
-        /// GET - Returns a paged array of users from the datasource.
+        /// POST - Returns a paged array of users from the datasource.
         /// </summary>
         /// <param name="filter"></param>
         /// <returns>Paged object with an array of users.</returns>
@@ -90,7 +83,7 @@ namespace Pims.Api.Areas.Admin.Controllers
         }
 
         /// <summary>
-        /// GET - Returns a paged array of users from the datasource that belong to the same agency (or sub-agency) as the current user.
+        /// POST /api/admin/users/my/agency - Returns a paged array of users from the datasource that belong to the same agency (or sub-agency) as the current user.
         /// </summary>
         /// <param name="filter"></param>
         /// <returns>Paged object with an array of users.</returns>
@@ -105,7 +98,7 @@ namespace Pims.Api.Areas.Admin.Controllers
         }
 
         /// <summary>
-        /// GET - Returns a user for the specified 'id' from the datasource.
+        /// GET /api/admin/users/${id} - Returns a user for the specified 'id' from the datasource.
         /// </summary>
         /// <param name="id">The unique 'id' for the user to return.</param>
         /// <returns>The user requested.</returns>
@@ -160,12 +153,14 @@ namespace Pims.Api.Areas.Admin.Controllers
             var user = _mapper.Map<Model.UserModel>(entity);
             return new JsonResult(user);
         }
-        public class AddRolesToUserRequest{
+        public class AddRolesToUserRequest
+        {
             public string[] Roles { get; set; }
         }
-        public class RemoveRolesToUserRequest{
+        public class RemoveRolesToUserRequest
+        {
             public string[] Roles { get; set; }
-        }        
+        }
 
         /// <summary>
         /// POST - Get all roles from the Keycloak Gold API.
@@ -212,7 +207,8 @@ namespace Pims.Api.Areas.Admin.Controllers
         /// <param name="username">The user's username</param>
         /// <param name="request"></param>
         /// <returns>JSON Array of the users roles, updated with the one just added.</returns>
-        [HttpPost("roles/{username}")][Produces("application/json")]
+        [HttpPost("roles/{username}")]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(Model.UserModel), 200)]
         [ProducesResponseType(typeof(Api.Models.ErrorResponseModel), 400)]
         [SwaggerOperation(Tags = new[] { "admin-user" })]

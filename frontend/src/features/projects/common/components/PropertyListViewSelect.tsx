@@ -7,9 +7,9 @@ import { getIn, useFormikContext } from 'formik';
 import useDeepCompareEffect from 'hooks/useDeepCompareEffect';
 import useCodeLookups from 'hooks/useLookupCodes';
 import _ from 'lodash';
-import queryString from 'query-string';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Container, FormControlProps } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 import { clickableTooltip, IFilterBarState, useProject } from '../../common';
 import useTable from '../../dispose/hooks/useTable';
@@ -52,21 +52,32 @@ export const PropertyListViewSelect: React.FC<InputProps> = ({
   pageIndex,
   setPageIndex,
 }) => {
+  const navigate = useNavigate();
   const lookupCodes = useCodeLookups();
   const { values, setFieldValue } = useFormikContext<any>();
   const existingProperties: IProperty[] = getIn(values, field);
   const agencies = useMemo(() => lookupCodes.getByType(API.AGENCY_CODE_SET_NAME), [lookupCodes]);
   const { project } = useProject();
   const filterByParent = useCodeLookups().filterByParent;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const filteredAgencies = useMemo(() => filterByParent(agencies, project.agencyId), [agencies]);
-  const agencyIds = useMemo(() => filteredAgencies.map(x => parseInt(x.id, 10)), [
-    filteredAgencies,
-  ]);
+  const agencyIds = useMemo(
+    () => filteredAgencies.map((x) => parseInt(x.id, 10)),
+    [filteredAgencies],
+  );
   if (project === undefined) {
     throw Error('unable to load project data');
   }
-  const columns = useMemo(() => getPropertyColumns({ project: project }), [project]);
+  const columns = useMemo(
+    () =>
+      getPropertyColumns({
+        project: project,
+        editableClassification: false,
+        editableFinancials: false,
+        editableZoning: false,
+        limitLabels: ['Surplus Active', 'Surplus Encumbered'],
+      }),
+    [project],
+  );
   // We'll start our table without any data
   const [data, setData] = useState<IProperty[]>([]);
   const [pageSize, setPageSize] = useState(5);
@@ -114,27 +125,38 @@ export const PropertyListViewSelect: React.FC<InputProps> = ({
     setFieldValue(field, properties);
   }, [properties, setFieldValue, field]);
 
-  const onRowClick = useCallback((row: IProperty) => {
-    window.open(
-      `/mapview?${queryString.stringify({
-        sidebar: true,
-        disabled: true,
-        loadDraft: false,
-        parcelId: [PropertyTypes.PARCEL, PropertyTypes.SUBDIVISION].includes(row.propertyTypeId)
-          ? row.id
-          : undefined,
-        buildingId: row.propertyTypeId === PropertyTypes.BUILDING ? row.id : undefined,
-      })}`,
-      '_blank',
-    );
-  }, []);
+  const onRowClick = useCallback(
+    (row: IProperty) => {
+      const queryParams = new URLSearchParams();
+      queryParams.set('sidebar', 'true');
+      queryParams.set('disabled', 'true');
+      queryParams.set('loadDraft', 'false');
+      queryParams.set(
+        'buildingId',
+        `${row.propertyTypeId === PropertyTypes.BUILDING ? row.id : undefined}`,
+      );
+      queryParams.set(
+        'parcelId',
+        `${
+          [PropertyTypes.PARCEL, PropertyTypes.SUBDIVISION].includes(row.propertyTypeId)
+            ? row.id
+            : undefined
+        }`,
+      );
+      navigate({
+        pathname: '/mapview',
+        search: queryParams.toString(),
+      });
+    },
+    [navigate],
+  );
 
   return (
     <Container className="col-md-12 PropertyListViewSelect">
       {!disabled && (
         <div className="ScrollContainer">
           <h2>Available Properties</h2>
-          <Table<IProperty>
+          <Table<IProperty, any>
             name="SelectPropertiesTable"
             columns={columns}
             data={data}
@@ -184,7 +206,7 @@ export const PropertyListViewSelect: React.FC<InputProps> = ({
             Remove Selected
           </Button>
         </Container>
-        <Table<IProperty>
+        <Table<IProperty, any>
           name="ProjectPropertiesTable"
           columns={columnsWithRemove}
           data={properties ?? []}

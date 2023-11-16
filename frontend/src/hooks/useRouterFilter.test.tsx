@@ -1,7 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
 import * as reducerTypes from 'constants/reducerTypes';
 import { createMemoryHistory } from 'history';
-import queryString from 'query-string';
 import React from 'react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
@@ -17,11 +16,13 @@ const getStore = (filter: any) =>
     [reducerTypes.FILTER]: filter,
   });
 
-const getWrapper = (store: any) => ({ children }: any) => (
-  <Provider store={store}>
-    <MemoryRouter initialEntries={[history.location]}>{children}</MemoryRouter>
-  </Provider>
-);
+const getWrapper =
+  (store: any) =>
+  ({ children }: any) => (
+    <Provider store={store}>
+      <MemoryRouter initialEntries={[history.location]}>{children}</MemoryRouter>
+    </Provider>
+  );
 
 const emptyFilter = {
   searchBy: 'address',
@@ -86,14 +87,18 @@ describe('useRouterFilter hook tests', () => {
     const expectedFilter = { ...defaultFilter, pid: '2' };
     history.push({ search: new URLSearchParams(expectedFilter).toString() });
 
-    let filterWithValues: any = { ...expectedFilter };
-    Object.keys(filterWithValues).forEach(key => {
+    const filterWithValues: any = { ...expectedFilter };
+    Object.keys(filterWithValues).forEach((key) => {
       if (filterWithValues[key] === '') delete filterWithValues.key;
     });
 
     const wrapper = getWrapper(getStore({}));
     renderHook(() => useRouterFilter({ filter, setFilter, key: 'test' }), { wrapper });
-    expect(history.location.search).toEqual(`${queryString.stringify(filterWithValues)}`);
+    const queryParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(filterWithValues ?? {})) {
+      queryParams.set(key, String(value));
+    }
+    expect(history.location.search).toEqual(`${queryParams.toString()}`);
   });
 
   it('will not set the filter based on an invalid query string', () => {
@@ -127,9 +132,13 @@ describe('useRouterFilter hook tests', () => {
       wrapper,
     });
     const filterWithValues: any = { ...defaultFilter };
-    Object.keys(filterWithValues).forEach(key => {
+    Object.keys(filterWithValues).forEach((key) => {
       if (filterWithValues[key] === '') delete filterWithValues.key;
     });
-    expect(history.location.search).toEqual(`${queryString.stringify(filterWithValues)}`);
+    const queryParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(filterWithValues ?? {})) {
+      queryParams.set(key, String(value));
+    }
+    expect(history.location.search).toEqual(`${queryParams.toString()}`);
   });
 });

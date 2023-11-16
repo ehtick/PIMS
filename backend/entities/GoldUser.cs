@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace Pims.Dal.Entities
@@ -9,7 +8,6 @@ namespace Pims.Dal.Entities
     public class GoldUser : User
     {
         public IEnumerable<string> GoldUserRoles { get; set; }
-        public new ICollection<UserRole> Roles { get; } = new List<UserRole>();
 
         public GoldUser() { }
         public GoldUser(User user)

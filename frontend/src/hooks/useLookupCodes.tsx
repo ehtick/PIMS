@@ -15,20 +15,20 @@ import { useKeycloakWrapper } from './useKeycloakWrapper';
  */
 export function useCodeLookups() {
   const keycloak = useKeycloakWrapper();
-  const lookupCodes = useAppSelector<ILookupCode[]>(store => store.lookupCode.lookupCodes);
+  const lookupCodes = useAppSelector<ILookupCode[]>((store) => store.lookupCode.lookupCodes);
   const getCodeById = (type: string, id: string): string | undefined => {
-    return lookupCodes.filter(code => code.type === type && code.id === id)?.find(x => x)?.code;
+    return lookupCodes.filter((code) => code.type === type && code.id === id)?.find((x) => x)?.code;
   };
 
   const getByType = useCallback(
-    (type: string) => lookupCodes.filter(code => code.type === type && code.isDisabled !== true),
+    (type: string) => lookupCodes.filter((code) => code.type === type && code.isDisabled !== true),
     [lookupCodes],
   );
 
   const getPublicByType = useCallback(
     (type: string) =>
       lookupCodes.filter(
-        code => code.type === type && code.isDisabled === false && code.isPublic !== false,
+        (code) => code.type === type && code.isDisabled === false && code.isPublic !== false,
       ),
     [lookupCodes],
   );
@@ -63,25 +63,37 @@ export function useCodeLookups() {
   ) => {
     const classifications = getByType(API.PROPERTY_CLASSIFICATION_CODE_SET_NAME);
     return filter
-      ? (classifications ?? []).map(c => mapLookupCode(c)).filter(filter)
+      ? (classifications ?? []).map((c) => mapLookupCode(c)).filter(filter)
       : !keycloak.hasClaim(Claims.ADMIN_PROPERTIES)
       ? (classifications ?? [])
-          .map(c => mapLookupCode(c))
+          .map((c) => mapLookupCode(c))
           .filter(
-            c => +c.value !== Classifications.Subdivided && +c.value !== Classifications.Disposed,
+            (c) => +c.value !== Classifications.Subdivided && +c.value !== Classifications.Disposed,
           )
-      : (classifications ?? []).map(c => mapLookupCode(c));
+      : (classifications ?? []).map((c) => mapLookupCode(c));
   };
 
   /**
    * Returns the full name of an agency or the short code if
    * the full name is not found
-   * @param agencyCode the short code for the agency
+   * @param agencyId the id for the agency
    */
-  const getAgencyFullName = (agencyCode?: string) => {
+  const getAgencyFullNameById = (agencyId?: number) => {
     const agencies = getByType(API.AGENCY_CODE_SET_NAME);
-    const agencyItem = agencies.find(listItem => listItem.code === agencyCode);
-    return agencyItem ? agencyItem.name : agencyCode;
+    const agencyItem = agencies.find((listItem) => Number(listItem.id) === agencyId);
+    return agencyItem ? agencyItem.name : agencyId;
+  };
+
+  /**
+   * Returns the full name of a classification
+   * @param classficationId the id for the classification
+   */
+  const getClassificationNameById = (classficationId?: number) => {
+    const classfications = getByType(API.PROPERTY_CLASSIFICATION_CODE_SET_NAME);
+    const classification = classfications.find(
+      (listItem) => Number(listItem.id) === classficationId,
+    );
+    return classification ? classification.name : '';
   };
 
   return {
@@ -91,7 +103,8 @@ export function useCodeLookups() {
     getByType,
     getPublicByType,
     filterByParent,
-    getAgencyFullName,
+    getAgencyFullNameById,
+    getClassificationNameById,
     lookupCodes,
   };
 }

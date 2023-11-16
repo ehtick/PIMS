@@ -1,4 +1,4 @@
-import { act, cleanup, render, waitFor } from '@testing-library/react';
+import { cleanup, render, waitFor } from '@testing-library/react';
 import { ILookupCode } from 'actions/ILookupCode';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
@@ -113,6 +113,9 @@ const testRender = () =>
   );
 
 describe('Project list view tests', () => {
+  beforeAll(() => {
+    (global as any).IS_REACT_ACT_ENVIRONMENT = false;
+  });
   // clear mocks before each test
   beforeEach(() => {
     mockedService.getProjectList.mockClear();
@@ -128,10 +131,8 @@ describe('Project list view tests', () => {
     mockedService.getProjectList.mockResolvedValueOnce(testData as any);
     mockAxios.onAny().reply(200, {});
 
-    await act(async () => {
-      const { container } = testRender();
-      expect(container.firstChild).toMatchSnapshot();
-    });
+    const { container } = testRender();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it('Displays message for empty list', async () => {
@@ -142,14 +143,13 @@ describe('Project list view tests', () => {
       pageIndex: 0,
       items: [],
     });
-    const { findByText, container } = testRender();
 
-    act(() => {
-      // default table message when there is no data to display
-      waitFor(() => {
-        const noResults = findByText('No rows to display');
-        expect(noResults).toBeVisible();
-      });
+    const { getByText, container } = testRender();
+
+    // default table message when there is no data to display
+    await waitFor(() => {
+      const noResults = getByText('No rows to display');
+      expect(noResults).toBeVisible();
       expect(container.querySelector('span[class="spinner-border"]')).not.toBeInTheDocument();
     });
   });
@@ -163,8 +163,9 @@ describe('Project list view tests', () => {
       items: [],
     });
 
-    await act(async () => {
-      const { queryByTestId, container } = testRender();
+    const { queryByTestId, container } = testRender();
+
+    await waitFor(() => {
       expect(queryByTestId('excel-icon')).not.toBeInTheDocument();
       expect(queryByTestId('csv-icon')).not.toBeInTheDocument();
       expect(container.querySelector('span[class="spinner-border"]')).not.toBeInTheDocument();
@@ -182,7 +183,7 @@ describe('Project list view tests', () => {
     });
     const { getByTestId, container } = testRender();
 
-    await act(async () => {
+    await waitFor(() => {
       expect(getByTestId('excel-icon')).toBeInTheDocument();
       expect(getByTestId('csv-icon')).toBeInTheDocument();
       expect(container.querySelector('span[class="spinner-border"]')).not.toBeInTheDocument();

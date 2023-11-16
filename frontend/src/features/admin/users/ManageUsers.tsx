@@ -9,7 +9,6 @@ import useCodeLookups from 'hooks/useLookupCodes';
 import { IUser, IUsersFilter } from 'interfaces';
 import { isEmpty } from 'lodash';
 import _ from 'lodash';
-import queryString from 'query-string';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Button, Container } from 'react-bootstrap';
 import { FaFileExcel } from 'react-icons/fa';
@@ -42,10 +41,14 @@ const FileIcon = styled(Button)`
   padding: 6px 5px;
 `;
 
-const downloadUsers = (filter: IPaginateParams) =>
-  `${ENVIRONMENT.apiUrl}/reports/users?${
-    filter ? queryString.stringify({ ...filter, all: true }) : ''
-  }`;
+const downloadUsers = (filter: IPaginateParams) => {
+  const queryParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(filter ?? {})) {
+    queryParams.set(key, String(value));
+  }
+  queryParams.set('all', 'true');
+  return `${ENVIRONMENT.apiUrl}/reports/users?${queryParams.toString()}`;
+};
 
 /**
  * Component to manage the user accounts.
@@ -61,13 +64,13 @@ export const ManageUsers = () => {
   const roles = useMemo(() => getByType(API.ROLE_CODE_SET_NAME), [getByType]);
   const columns = useMemo(() => columnDefinitions, []);
 
-  const pagedUsers = useAppSelector(store => store.users.pagedUsers);
-  const pageSize = useAppSelector(store => store.users.rowsPerPage);
-  const pageIndex = useAppSelector(store => store.users.pageIndex);
-  const sort = useAppSelector(store => store.users.sort);
-  const filter = useAppSelector(store => store.users.filter);
+  const pagedUsers = useAppSelector((store) => store.users.pagedUsers);
+  const pageSize = useAppSelector((store) => store.users.rowsPerPage);
+  const pageIndex = useAppSelector((store) => store.users.pageIndex);
+  const sort = useAppSelector((store) => store.users.sort);
+  const filter = useAppSelector((store) => store.users.filter);
   const users = useAppSelector(
-    store => (store.network.requests as any)[actionTypes.GET_USERS] as IGenericNetworkAction,
+    (store) => (store.network.requests as any)[actionTypes.GET_USERS] as IGenericNetworkAction,
   );
 
   const onRequestData = useCallback(
@@ -88,7 +91,7 @@ export const ManageUsers = () => {
     )(dispatch);
   }, [dispatch, sort, pageIndex, pageSize, filter]);
 
-  let userList = pagedUsers.items.map(
+  const userList = pagedUsers.items.map(
     (u: IUser): IUserRecord => ({
       id: u.id,
       email: u.email,
@@ -96,7 +99,7 @@ export const ManageUsers = () => {
       firstName: u.firstName,
       lastName: u.lastName,
       isDisabled: u.isDisabled,
-      roles: u.roles ? u.roles.map(r => r?.name).join(', ') : '',
+      roles: u.roles ? u.roles.map((r) => r?.name).join(', ') : '',
       agency: u.agencies && u.agencies.length > 0 ? u.agencies[0]?.name : '',
       position: u.position ?? '',
       lastLogin: u.lastLogin ? formatApiDateTime(u.lastLogin) : '',
@@ -130,7 +133,7 @@ export const ManageUsers = () => {
         value={filter}
         agencyLookups={agencies}
         rolesLookups={roles}
-        onChange={value => {
+        onChange={(value) => {
           (value as any)?.agency
             ? dispatch(
                 storeUserFilter({
@@ -152,7 +155,7 @@ export const ManageUsers = () => {
             </TooltipWrapper>
           </div>
           <TableContainer fluid>
-            <Table<IUserRecord>
+            <Table<IUserRecord, any>
               name="usersTable"
               columns={columns}
               pageIndex={pageIndex}
@@ -169,7 +172,7 @@ export const ManageUsers = () => {
                 }
               }}
               sort={sort}
-              onPageSizeChange={size => dispatch(storeUserPageQuantity(size))}
+              onPageSizeChange={(size) => dispatch(storeUserPageQuantity(size))}
               loading={!(users && !users.isFetching)}
               clickableTooltip="Click IDIR/BCeID link to view User Information page"
             />

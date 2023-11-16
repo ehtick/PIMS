@@ -1,3 +1,5 @@
+import './AddressForm.scss';
+
 import { ILookupCode } from 'actions/ILookupCode';
 import { IAddress } from 'actions/parcelsActions';
 import { FastInput, Select } from 'components/common/form';
@@ -11,7 +13,7 @@ import { useCallback } from 'react';
 import React from 'react';
 import { Col, Row } from 'react-bootstrap';
 import { useAppSelector } from 'store';
-import { mapLookupCode } from 'utils';
+import { mapLookupCode, postalCodeFormatter } from 'utils';
 
 import { GeocoderAutoComplete } from '../../GeocoderAutoComplete';
 import { streetAddressTooltip } from '../strings';
@@ -44,8 +46,9 @@ export const defaultAddressValues: IAddress = {
   provinceId: 'BC',
   postal: '',
 };
-const AddressForm = <T extends any>(props: AddressProps & FormikProps<T>) => {
-  const lookupCodes = useAppSelector(store => store.lookupCode.lookupCodes);
+
+const AddressForm = <T,>(props: AddressProps & FormikProps<T>) => {
+  const lookupCodes = useAppSelector((store) => store.lookupCode.lookupCodes);
   const provinces = _.filter(lookupCodes, (lookupCode: ILookupCode) => {
     return lookupCode.type === API.PROVINCE_CODE_SET_NAME;
   }).map(mapLookupCode);
@@ -66,52 +69,23 @@ const AddressForm = <T extends any>(props: AddressProps & FormikProps<T>) => {
     }
   };
 
-  /**
-   * postalCodeFormatter takes the specified postal code and formats it with a space in the middle
-   * @param {string} postal The target postal to be formatted
-   */
-  const postalCodeFormatter = (postal: string) => {
-    const regex = /([a-zA-z][0-9][a-zA-z])[\s-]?([0-9][a-zA-z][0-9])/;
-    const format = postal.match(regex);
-    if (format !== null && format.length === 3) {
-      postal = `${format[1]} ${format[2]}`;
-    }
-    return postal.toUpperCase();
-  };
+  const leftColumnWidth = 4;
 
   return (
     <>
       {props.hideStreetAddress !== true && (
-        <Row style={{ marginBottom: '10px', alignItems: 'center' }}>
-          <Col
-            md="auto"
-            style={{
-              width: '140px',
-              textAlign: 'right',
-              marginRight: props.landReviewStyles ? '20px' : 0,
-            }}
-          >
+        <Row className="address-form-row">
+          <Col xs={leftColumnWidth} className="address-form-left-columns">
             <Label>Street Address</Label>
           </Col>
-          {props.buildingReviewStyles && (
-            <Col md="auto" style={{}}>
-              <div
-                style={{
-                  borderLeft: '1px solid black',
-                  height: '30px',
-                  marginRight: '20px',
-                }}
-              ></div>
-            </Col>
-          )}
-          <Col md="auto">
+          <Col>
             <GeocoderAutoComplete
               tooltip={props.toolTips ? streetAddressTooltip : undefined}
               value={getIn(props.values, withNameSpace('line1'))}
               disabled={props.disableStreetAddress || props.disabled}
               field={withNameSpace('line1')}
               onSelectionChanged={handleGeocoderChanges}
-              onTextChange={value => props.setFieldValue(withNameSpace('line1'), value)}
+              onTextChange={(value) => props.setFieldValue(withNameSpace('line1'), value)}
               error={getIn(props.errors, withNameSpace('line1'))}
               touch={getIn(props.touched, withNameSpace('line1'))}
               displayErrorTooltips
@@ -120,31 +94,13 @@ const AddressForm = <T extends any>(props: AddressProps & FormikProps<T>) => {
           </Col>
         </Row>
       )}
-      <Row style={{ marginBottom: '10px', alignItems: 'center' }}>
-        <Col
-          md="auto"
-          style={{
-            width: '140px',
-            textAlign: 'right',
-            marginRight: props.landReviewStyles ? '20px' : 0,
-          }}
-        >
+      <Row className="address-form-row">
+        <Col xs={leftColumnWidth} className="address-form-left-columns">
           <Label>Location</Label>
         </Col>
-        {props.buildingReviewStyles && (
-          <Col md="auto" style={{}}>
-            <div
-              style={{
-                borderLeft: '1px solid black',
-                height: '30px',
-                marginRight: '20px',
-              }}
-            ></div>
-          </Col>
-        )}
-        <Col md="auto">
+        <Col>
           <TypeaheadField
-            options={administrativeAreas.map(x => x.label)}
+            options={administrativeAreas.map((x) => x.label)}
             name={withNameSpace('administrativeArea')}
             disabled={props.disabled}
             hideValidation={props.disableCheckmark}
@@ -154,30 +110,11 @@ const AddressForm = <T extends any>(props: AddressProps & FormikProps<T>) => {
           />
         </Col>
       </Row>
-      <Row style={{ marginBottom: '10px', alignItems: 'center' }}>
-        <Col
-          md="auto"
-          style={{
-            width: '140px',
-            textAlign: 'right',
-            paddingRight: props.landReviewStyles ? '55px' : '12px',
-            marginRight: props.buildingReviewStyles ? 0 : '-35px',
-          }}
-        >
+      <Row className="address-form-row">
+        <Col xs={leftColumnWidth} className="address-form-left-columns">
           <Label>Province</Label>
         </Col>
-        {props.buildingReviewStyles && (
-          <Col md="auto" style={{}}>
-            <div
-              style={{
-                borderLeft: '1px solid black',
-                height: '30px',
-                marginRight: '20px',
-              }}
-            ></div>
-          </Col>
-        )}
-        <Col md="auto" style={{ paddingRight: 0 }}>
+        <Col>
           <Select
             disabled={true}
             placeholder="Must Select One"
@@ -186,32 +123,14 @@ const AddressForm = <T extends any>(props: AddressProps & FormikProps<T>) => {
           />
         </Col>
       </Row>
-      <Row className="postal" style={{ marginBottom: '10px', alignItems: 'center' }}>
-        <Col
-          md="auto"
-          style={{
-            width: '140px',
-            textAlign: 'right',
-            marginLeft: props.landReviewStyles ? '-10px' : 0,
-          }}
-        >
+      <Row className="address-form-row">
+        <Col xs={leftColumnWidth} className="address-form-left-columns">
           <Label>Postal Code</Label>
         </Col>
-        <Col
-          md="auto"
-          style={{
-            width:
-              props.buildingReviewStyles || props.landReviewStyles
-                ? '200px'
-                : props.buildingInformationStyles
-                ? '275px'
-                : '250px',
-          }}
-        >
+        <Col>
           <FastInput
             className="input-small"
             formikProps={props}
-            style={{ width: '120px' }}
             disabled={props.disabled}
             onBlurFormatter={(postal: string) =>
               postal.replace(postal, postalCodeFormatter(postal))

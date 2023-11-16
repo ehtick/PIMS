@@ -70,7 +70,7 @@ export const PropertyFilter: React.FC<IPropertyFilterProps> = ({
   const [initialLoad, setInitialLoad] = useState(false);
   useRouterFilter({
     filter: propertyFilter,
-    setFilter: filter => {
+    setFilter: (filter) => {
       onChange(filter);
       setPropertyFilter(filter);
     },
@@ -79,18 +79,20 @@ export const PropertyFilter: React.FC<IPropertyFilterProps> = ({
     setSorting: onSorting,
   });
 
-  const agencies = (agencyLookupCodes ?? []).map(c =>
+  const agencies = (agencyLookupCodes ?? []).map((c) =>
     mapLookupCodeWithParentString(c, agencyLookupCodes),
   );
   const classifications = lookupCodes.getPropertyClassificationOptions();
-  const adminAreas = (adminAreaLookupCodes ?? []).map(c => mapLookupCode(c));
+  const adminAreas = (adminAreaLookupCodes ?? []).map((c) => mapLookupCode(c));
   const [clear, setClear] = useState(false);
   const [options, setOptions] = useState([]);
 
   const initialValues = useMemo(() => {
     const values = { ...defaultFilter, ...propertyFilter };
     if (typeof values.agencies === 'string') {
-      const agency = agencies.find(x => x.value.toString() === values.agencies?.toString()) as any;
+      const agency = agencies.find(
+        (x) => x.value.toString() === values.agencies?.toString(),
+      ) as any;
       if (agency) {
         values.agencies = agency;
       }
@@ -122,11 +124,11 @@ export const PropertyFilter: React.FC<IPropertyFilterProps> = ({
           spl_properties: values.inSurplusPropertyProgram ?? false,
           location: values.administrativeArea ?? '',
           project_name_number: values.projectNumber ?? '',
-          lot_min: values.minLotSize ?? '',
-          lot_max: values.maxLotSize ?? '',
+          lot_min: Number(values.minLotSize) ?? '',
+          lot_max: Number(values.maxLotSize) ?? '',
           land_only: values.bareLandOnly ?? false,
           predominate_use: values.predominateUseId ?? '',
-          net_usable: values.rentableArea ?? '',
+          net_usable: Number(values.rentableArea) ?? '',
         },
       });
     }
@@ -154,113 +156,102 @@ export const PropertyFilter: React.FC<IPropertyFilterProps> = ({
     >
       {({ isSubmitting, setFieldValue, values }) => (
         //@ts-ignore The following line raises a linter error stating that there is no "autoComplete" prop, even though there is.
-        <Form className="container-append" autoComplete="off">
-          <Container className="map-filter-container">
-            <Row>
-              <Col md="auto" className="filter-col pad-top">
-                <FindMorePropertiesButton
-                  buttonText="Find available surplus properties"
-                  onEnter={() => {
-                    setFindMoreOpen(true);
-                    setFieldValue('surplusFilter', true);
-                    setFieldValue('includeAllProperties', true);
-                    !keycloak.hasClaim(Claims.ADMIN_PROPERTIES) &&
-                      setFieldValue('agencies', undefined);
-                  }}
-                  onExit={() => {
-                    setFindMoreOpen(false);
-                    setFieldValue('surplusFilter', false);
-                  }}
-                />
-              </Col>
-              <Col md="auto" className="filter-col pad-top">
-                <div className="divider"></div>
-              </Col>
+        <Form autoComplete="off">
+          <Container fluid className="px-0 map-filter-container">
+            <div className="flex-div">
+              <FindMorePropertiesButton
+                buttonText="Find available surplus properties"
+                onEnter={() => {
+                  setFindMoreOpen(true);
+                  setFieldValue('surplusFilter', true);
+                  setFieldValue('includeAllProperties', true);
+                  !keycloak.hasClaim(Claims.ADMIN_PROPERTIES) &&
+                    setFieldValue('agencies', undefined);
+                }}
+                onExit={() => {
+                  setFindMoreOpen(false);
+                  setFieldValue('surplusFilter', false);
+                }}
+              />
 
-              <Col md="auto" className="filter-col">
-                {showAllAgencySelect ? (
-                  <PropertyFilterAgencyOptions disabled={findMoreOpen} agencies={agencies} />
-                ) : (
-                  <div style={{ paddingTop: '24px' }}>
+              <Row>
+                <Col className="dropdown-col">
+                  {showAllAgencySelect ? (
+                    <PropertyFilterAgencyOptions disabled={findMoreOpen} agencies={agencies} />
+                  ) : (
                     <ParentSelect
                       field="agencies"
-                      options={myAgencies.map(c => mapSelectOptionWithParent(c, myAgencies))}
+                      options={myAgencies.map((c) => mapSelectOptionWithParent(c, myAgencies))}
                       filterBy={['code', 'label', 'parent']}
                       placeholder="My Agencies"
                       selectClosest
                       disabled={findMoreOpen}
                     />
-                  </div>
-                )}
-              </Col>
-              <Col md="auto" className="filter-col" style={{ paddingTop: 24, width: '150px' }}>
-                <AsyncTypeahead
-                  disabled={
-                    (findMoreOpen || values.includeAllProperties === true) &&
-                    !keycloak.hasClaim(Claims.ADMIN_PROPERTIES)
-                  }
-                  isLoading={initialLoad}
-                  id={`name-field`}
-                  inputProps={{ id: `name-field` }}
-                  placeholder="Property name"
-                  onSearch={() => {
-                    setInitialLoad(true);
-                    fetchPropertyNames(keycloak.agencyId!)(dispatch).then(results => {
-                      setOptions(results);
-                      setInitialLoad(false);
-                    });
-                  }}
-                  options={options}
-                  onChange={(newValues: string[]) => {
-                    setFieldValue('name', getIn(newValues[0], 'value') ?? newValues[0]);
-                  }}
-                  ref={ref}
-                  onBlur={(e: any) =>
-                    getIn(values, 'name') !== e.target.value &&
-                    setFieldValue('name', e.target.value)
-                  }
-                />
-              </Col>
-              <Col md="auto" className="filter-col" style={{ paddingTop: 24, width: '150px' }}>
-                <TypeaheadField
-                  name="administrativeArea"
-                  placeholder="Location"
-                  selectClosest
-                  hideValidation={true}
-                  options={adminAreas.map(x => x.label)}
-                  onChange={(vals: any) => {
-                    setFieldValue('administrativeArea', getIn(vals[0], 'name') ?? vals[0]);
-                  }}
-                  clearSelected={clear}
-                  setClear={setClear}
-                  disabled={findMoreOpen}
-                />
-              </Col>
-              <Col md="auto" className="filter-col property-filter-options">
-                <PropertyFilterOptions disabled={findMoreOpen} />
-              </Col>
-              <Col
-                md="auto"
-                className="filter-col"
-                style={{ paddingTop: 24, width: 150, marginRight: '-10px' }}
-              >
-                <Select
-                  field="classificationId"
-                  placeholder="Classification"
-                  options={classifications}
-                  disabled={findMoreOpen}
-                />
-              </Col>
-              <Col md="auto" className="filter-col pad-top">
+                  )}
+                </Col>
+                <Col className="filter-col">
+                  <AsyncTypeahead
+                    disabled={
+                      (findMoreOpen || values.includeAllProperties === true) &&
+                      !keycloak.hasClaim(Claims.ADMIN_PROPERTIES)
+                    }
+                    isLoading={initialLoad}
+                    id={`name-field`}
+                    inputProps={{ id: `name-field` }}
+                    placeholder="Property name"
+                    onSearch={() => {
+                      setInitialLoad(true);
+                      fetchPropertyNames()(dispatch).then((results) => {
+                        setOptions(results);
+                        setInitialLoad(false);
+                      });
+                    }}
+                    options={options}
+                    onChange={(newValues: string[]) => {
+                      setFieldValue('name', getIn(newValues[0], 'value') ?? newValues[0]);
+                    }}
+                    ref={ref}
+                    onBlur={(e: any) =>
+                      getIn(values, 'name') !== e.target.value &&
+                      setFieldValue('name', e.target.value)
+                    }
+                  />
+                </Col>
+                <Col className="filter-col">
+                  <TypeaheadField
+                    name="administrativeArea"
+                    placeholder="Location"
+                    selectClosest
+                    hideValidation={true}
+                    options={adminAreas.map((x) => x.label)}
+                    onChange={(vals: any) => {
+                      setFieldValue('administrativeArea', getIn(vals[0], 'name') ?? vals[0]);
+                    }}
+                    clearSelected={clear}
+                    setClear={setClear}
+                    disabled={findMoreOpen}
+                  />
+                </Col>
+                <Col className="dropdown-col">
+                  <PropertyFilterOptions disabled={findMoreOpen} />
+                </Col>
+                <Col className="filter-col">
+                  <Select
+                    field="classificationId"
+                    placeholder="Classification"
+                    options={classifications}
+                    disabled={findMoreOpen}
+                  />
+                </Col>
+              </Row>
+              <div className="flex-div">
                 <SearchButton
                   disabled={isSubmitting || findMoreOpen}
                   onClick={() => setTriggerFilterChanged && setTriggerFilterChanged(true)}
                 />
-              </Col>
-              <Col md="auto" className="filter-col pad-top">
                 <ResetButton disabled={isSubmitting || findMoreOpen} onClick={resetFilter} />
-              </Col>
-            </Row>
+              </div>
+            </div>
           </Container>
         </Form>
       )}

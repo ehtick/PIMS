@@ -2,7 +2,7 @@ import { FormikErrors, setIn } from 'formik';
 import { Workflow, WorkflowStatus } from 'hooks/api/projects';
 import { useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
-import { AnyObject } from 'yup/lib/types';
+import { AnyObject } from 'yup';
 
 import { IProjectForm } from '../interfaces';
 import {
@@ -84,10 +84,10 @@ export const useProjectValidation = ({ id }: IProjectValidationProps) => {
         values.originalStatusCode !== WorkflowStatus.NotInSpl
       ) {
         const tasks = values.tasks.filter(
-          t => t.statusCode === WorkflowStatus.Disposed && !t.isOptional && !t.isCompleted,
+          (t) => t.statusCode === WorkflowStatus.Disposed && !t.isOptional && !t.isCompleted,
         );
-        tasks.forEach(t => {
-          const index = values.tasks.findIndex(ti => ti.name === t.name);
+        tasks.forEach((t) => {
+          const index = values.tasks.findIndex((ti) => ti.name === t.name);
           errors = {
             ...errors,
             ...setIn(errors, `tasks.${index}.isCompleted`, `${t.name} required`),

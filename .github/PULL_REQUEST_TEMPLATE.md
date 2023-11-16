@@ -1,46 +1,24 @@
-# Description
-[//]: # (THESE COMMENTS ARE HIDDEN WHEN THE PR IS PUBLISHED, no need to remove them.)
-[//]: # (Please include a summary of the changes.)
+<!--  
+PR Title format:  
+JIRA_BOARD_ABBREVIATION-JIRA_TASK_NUMBER: TITLE_OF_JIRA_TASK  
+Example: PIMS-700: A great ticket                                       
+-->  
 
+## 🎯 Summary
 
+<!-- EDIT JIRA LINK BELOW -->  
+[PIMS-###: ](https://apps.itsm.gov.bc.ca/jira/browse/PIMS-###)
 
-[![](https://img.shields.io/badge/tickets_and_issues_this_solves-blue?style=for-the-badge)](https://hamzamohdzubair.github.io/redant/)
+<!-- PROVIDE BELOW an explanation of your changes -->
 
-[//]: # (THESE COMMENTS ARE HIDDEN WHEN THE PR IS PUBLISHED, no need to remove them.)
-[//]: # (Please include a list of Jira tickets and or Issues this PR resolves.)
+<!-- PROVIDE ABOVE an explanation of your changes -->
 
-- None listed.
+## 🔰 Checklist
 
-[![](https://img.shields.io/badge/known_issues-blueviolet?style=for-the-badge)](https://hamzamohdzubair.github.io/redant/)
+- [ ] I have read and agree with the following checklist and am following the guidelines in our [Code of Conduct](CODE_OF_CONDUCT.md) document.
 
-[//]: # (THESE COMMENTS ARE HIDDEN WHEN THE PR IS PUBLISHED, no need to remove them.)
-[//]: # (Please include a list of known issues if there are any.)
-
-- None listed.
-
-## Type of change
-[//]: # (THESE COMMENTS ARE HIDDEN WHEN THE PR IS PUBLISHED, no need to remove them.)
-[//]: # (Please delete options that are not relevant.)
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] Dependency updates (may include refactoring of a dependencies functionality)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
-
-# How Has This Been Tested?
-[//]: # (THESE COMMENTS ARE HIDDEN WHEN THE PR IS PUBLISHED, no need to remove them.)
-[//]: # (Please describe the tests that you ran to verify your changes.)
-
-
-
-# Checklist:
-
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
+> - I have performed a self-review of my code.
+> - I have commented my code, particularly in hard-to-understand areas.
+> - I have made corresponding changes to the documentation where required.
+> - I have tested my changes to the best of my ability.
+> - My changes generate no new warnings.

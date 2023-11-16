@@ -8,14 +8,11 @@ export const Logout = () => {
 
   // On component mount
   useEffect(() => {
-    if (!configuration.siteMinderLogoutUrl) {
+    if (!configuration.keycloakLogoutUrl) {
       navigate('/login');
     } else {
-      navigate(
-        `${configuration.siteMinderLogoutUrl}?returl=${configuration.baseUrl}/login&retnow=1`,
-      );
+      window.location.href = `${configuration.keycloakLogoutUrl}`;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <></>;

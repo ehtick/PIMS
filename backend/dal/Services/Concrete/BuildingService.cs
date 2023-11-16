@@ -152,6 +152,7 @@ namespace Pims.Dal.Services
                 .Include(p => p.Evaluations)
                 .Include(p => p.Fiscals)
                 .Include(p => p.UpdatedBy)
+                .Include(p => p.CreatedBy)
                 .Include(p => p.Projects).ThenInclude(pp => pp.Project).ThenInclude(p => p.Workflow)
                 .Include(p => p.Projects).ThenInclude(pp => pp.Project).ThenInclude(p => p.Status)
                 .AsNoTracking()
@@ -236,11 +237,11 @@ namespace Pims.Dal.Services
                 .Include(b => b.Parcels).ThenInclude(pb => pb.Parcel).ThenInclude(b => b.Address).ThenInclude(a => a.Province)
                 .FirstOrDefault(b => b.Id == building.Id) ?? throw new KeyNotFoundException();
 
-             var user = this.Context.Users
-                .Include(u => u.Agencies)
-                .ThenInclude(a => a.Agency)
-                .ThenInclude(a => a.Children)
-                .SingleOrDefault(u => u.Username == this.User.GetUsername()) ?? throw new KeyNotFoundException();
+            var user = this.Context.Users
+               .Include(u => u.Agencies)
+               .ThenInclude(a => a.Agency)
+               .ThenInclude(a => a.Children)
+               .SingleOrDefault(u => u.Username == this.User.GetUsername()) ?? throw new KeyNotFoundException();
             var userAgencies = user.Agencies.Select(a => a.AgencyId).ToList();
 
             if (!isAdmin && !userAgencies.Contains((int)existingBuilding.AgencyId)) throw new NotAuthorizedException("User may not edit buildings outside of their agency.");
@@ -382,11 +383,11 @@ namespace Pims.Dal.Services
                 .FirstOrDefault(b => b.Id == building.Id) ?? throw new KeyNotFoundException();
             this.ThrowIfNotAllowedToUpdate(existingBuilding, _options.Project);
 
-             var user = this.Context.Users
-                .Include(u => u.Agencies)
-                .ThenInclude(a => a.Agency)
-                .ThenInclude(a => a.Children)
-                .SingleOrDefault(u => u.Username == this.User.GetUsername()) ?? throw new KeyNotFoundException();
+            var user = this.Context.Users
+               .Include(u => u.Agencies)
+               .ThenInclude(a => a.Agency)
+               .ThenInclude(a => a.Children)
+               .SingleOrDefault(u => u.Username == this.User.GetUsername()) ?? throw new KeyNotFoundException();
             var userAgencies = user.Agencies.Select(a => a.AgencyId).ToList();
 
             if (!isAdmin && !userAgencies.Contains((int)existingBuilding.AgencyId))
@@ -399,6 +400,7 @@ namespace Pims.Dal.Services
             {
                 this.Context.SetOriginalRowVersion(existingBuilding);
                 this.Context.UpdateBuildingFinancials(existingBuilding, building.Evaluations, building.Fiscals);
+                existingBuilding.ClassificationId = building.ClassificationId;
             }
 
             this.Context.SaveChanges();

@@ -107,6 +107,7 @@ export const useAccessRequest = () => {
       dispatch(storeRequest(request(actionTypes.ADD_REQUEST_ACCESS)));
       dispatch(showLoading());
 
+      // POST || PUT /api/users/access/requests/${id}
       return await CustomAxios()
         .request({
           url: ENVIRONMENT.apiUrl + API.REQUEST_ACCESS(accessRequest.id),
@@ -204,7 +205,7 @@ export const useAccessRequest = () => {
           url: ENVIRONMENT.apiUrl + API.REQUEST_ACCESS_DELETE(id),
           data,
         })
-        .then(response => {
+        .then((response) => {
           dispatch(storeSuccess(success(actionTypes.DELETE_REQUEST_ACCESS_ADMIN, response.status)));
           dispatch(deleteAccessRequest(id));
         })

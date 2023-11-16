@@ -1,3 +1,5 @@
+import './InformationForm.scss';
+
 import { FastSelect, Form, Input, SelectOption, TextArea } from 'components/common/form';
 import { ParentSelect } from 'components/common/form/ParentSelect';
 import { useFormikContext } from 'formik';
@@ -40,8 +42,8 @@ const InformationForm: FunctionComponent<InformationFormProps> = (props: Informa
   };
   const formikProps = useFormikContext();
   const keycloak = useKeycloakWrapper();
-  const agencies = (props.agencies ?? []).map(c => mapSelectOptionWithParent(c, props.agencies));
-  const userAgency = agencies.find(a => Number(a.value) === Number(keycloak.agencyId));
+  const agencies = (props.agencies ?? []).map((c) => mapSelectOptionWithParent(c, props.agencies));
+  const userAgency = agencies.find((a) => Number(a.value) === Number(keycloak.agencyId));
 
   const isUserAgencyAParent = useMemo(() => {
     return !!userAgency && !userAgency.parentId;
@@ -49,30 +51,36 @@ const InformationForm: FunctionComponent<InformationFormProps> = (props: Informa
 
   const myAgencies = useMyAgencies();
 
+  const leftColumnWidth = 3;
+
   return (
     <>
-      <Row>
-        <Col md="auto">
+      <Row className="information-form-row">
+        <Col xs={leftColumnWidth} className="left-column">
           <Form.Label>Name</Form.Label>
         </Col>
-        <Col md="auto">
-          <Input disabled={props.disabled} field={withNameSpace('name')} />
+        <Col>
+          <Input disabled={props.disabled} field={withNameSpace('name')} className="input" />
         </Col>
       </Row>
-      <Row>
-        <Col md="auto">
+      <Row className="information-form-row">
+        <Col xs={leftColumnWidth} className="left-column">
           <Form.Label>Description</Form.Label>
         </Col>
-        <Col md="auto">
-          <TextArea disabled={props.disabled} field={withNameSpace('description')} />
+        <Col>
+          <TextArea
+            disabled={props.disabled}
+            field={withNameSpace('description')}
+            className="input"
+          />
         </Col>
       </Row>
       {!props.wizard && (
-        <Row>
-          <Col md="auto">
+        <Row className="information-form-row">
+          <Col xs={leftColumnWidth} className="left-column">
             <Form.Label>Classification</Form.Label>
           </Col>
-          <Col md="auto">
+          <Col>
             <FastSelect
               formikProps={formikProps}
               disabled={props.disabled}
@@ -80,18 +88,19 @@ const InformationForm: FunctionComponent<InformationFormProps> = (props: Informa
               placeholder="Must Select One"
               field={withNameSpace('classificationId')}
               options={props.classifications}
+              className="input"
             />
           </Col>
         </Row>
       )}
-      <Row>
-        <Col md="auto" style={{ marginRight: '15px' }}>
+      <Row className="information-form-row">
+        <Col xs={leftColumnWidth} className="left-column">
           <Form.Label>Agency</Form.Label>
         </Col>
-        <Col md="auto" style={{ marginRight: '10px' }}>
+        <Col>
           <ParentSelect
             field={withNameSpace('agencyId')}
-            options={myAgencies.map(c => mapSelectOptionWithParent(c, myAgencies))}
+            options={myAgencies.map((c) => mapSelectOptionWithParent(c, myAgencies))}
             filterBy={['code', 'label', 'parent']}
             disabled={props.disabled || (!props.isPropertyAdmin && !isUserAgencyAParent)}
             convertValue={Number}

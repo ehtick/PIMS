@@ -41,6 +41,8 @@ const store = mockStore({
   },
 });
 
+jest.spyOn(console, 'warn').mockImplementation(() => {});
+
 const uiElement = (
   <Provider store={store}>
     <MemoryRouter initialEntries={[history.location]}>
@@ -50,6 +52,9 @@ const uiElement = (
 );
 
 describe('Select Project Properties Step', () => {
+  beforeAll(() => {
+    (global as any).IS_REACT_ACT_ENVIRONMENT = false;
+  });
   beforeEach(() => {
     mockAxios.reset();
     mockKeycloak([], [1]);
@@ -151,9 +156,8 @@ describe('Select Project Properties Step', () => {
   });
   it('selected properties are maintained even if the page changes.', async () => {
     mockAxios.onAny().reply(200, { items: [mockFlatProperty], total: 6 });
-    const { findByTestId, findByText, findAllByText, getByLabelText, getByText } = render(
-      uiElement,
-    );
+    const { findByTestId, findByText, findAllByText, getByLabelText, getByText } =
+      render(uiElement);
 
     //select a property
     const selectRowCheck = await findByTestId('selectrow-0');

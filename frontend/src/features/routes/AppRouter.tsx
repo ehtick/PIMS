@@ -32,6 +32,7 @@ import {
 } from 'features/projects/dispose';
 import { ProjectSummary } from 'features/projects/summary';
 import MapView from 'features/properties/map/MapView';
+import { UploadProperties } from 'features/properties/upload/UploadProperties';
 import { IsAuthenticatedRoute, LayoutWrapper, PrivateRoute } from 'features/routes';
 import useKeycloakWrapper from 'hooks/useKeycloakWrapper';
 import { AuthLayout, PublicLayout } from 'layouts';
@@ -44,8 +45,8 @@ const AccessRequestPage = lazy(() => import('features/admin/access-request/Acces
 const EditUserPage = lazy(() => import('features/admin/edit-user/EditUserPage'));
 const ManageAccessRequests = lazy(() => import('features/admin/access/ManageAccessRequests'));
 const ProjectListView = lazy(() => import('features/projects/list/ProjectListView'));
-const ProjectApprovalRequestListView = lazy(() =>
-  import('features/projects/list/ProjectApprovalRequestListView'),
+const ProjectApprovalRequestListView = lazy(
+  () => import('features/projects/list/ProjectApprovalRequestListView'),
 );
 const ProjectRouter = lazy(() => import('features/projects/common/ProjectRouter'));
 const SPLProjectListView = lazy(() => import('features/projects/list/SPLProjectListView'));
@@ -221,6 +222,16 @@ export const AppRouter: React.FC = () => {
                   component={EditAdminArea}
                   layout={AuthLayout}
                   title={getTitle('Create Administrative Area')}
+                />
+              }
+            />
+            <Route
+              path="uploadProperties"
+              element={
+                <LayoutWrapper
+                  component={UploadProperties}
+                  layout={AuthLayout}
+                  title={getTitle('Upload Properties')}
                 />
               }
             />

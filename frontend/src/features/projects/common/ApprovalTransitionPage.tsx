@@ -2,7 +2,6 @@ import GenericModal from 'components/common/GenericModal';
 import { IProject } from 'features/projects/interfaces';
 import { WorkflowStatus } from 'hooks/api/projects';
 import _ from 'lodash';
-import queryString from 'query-string';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Container, Spinner } from 'react-bootstrap';
@@ -12,6 +11,7 @@ import { useAppDispatch, useAppSelector } from 'store';
 import { updateWorkflowStatus, useProject } from '.';
 import { fetchProjectWorkflow } from './projectsActionCreator';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IApprovalTransitionPageProps {}
 
 const transitionFunction = (promise: any, navigate: any, toStatusCode: string) => {
@@ -37,17 +37,21 @@ const ErrorMessage = () => {
   );
 };
 
-export const ApprovalTransitionPage: React.FunctionComponent<IApprovalTransitionPageProps> = props => {
+export const ApprovalTransitionPage: React.FunctionComponent<IApprovalTransitionPageProps> = () => {
   const { workflowStatuses } = useProject();
   const dispatch = useAppDispatch();
-  const project = useAppSelector(store => store.project.project);
+  const project = useAppSelector((store) => store.project.project);
   const [isTransitioned, setIsTransitioned] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const toStatus = _.find(workflowStatuses, { code: project?.statusCode })?.toStatus;
   const [error, setError] = React.useState(false);
 
-  const params = queryString.parse(location.search);
+  const queryParams = new URLSearchParams(location.search);
+  const searchParams: any = {};
+  for (const [key, value] of queryParams.entries()) {
+    searchParams[key] = value;
+  }
 
   useEffect(() => {
     if (!!project && toStatus === undefined) {
@@ -58,7 +62,8 @@ export const ApprovalTransitionPage: React.FunctionComponent<IApprovalTransition
       // Look for a possible transition within the same workflow.
       const next = toStatus?.filter(
         (s: { workflowCode: any; code: string | string[] }) =>
-          s.workflowCode === project.workflowCode && (!params.to || s.code === params.to),
+          s.workflowCode === project.workflowCode &&
+          (!searchParams.to || s.code === searchParams.to),
       );
       if (
         project.statusCode === WorkflowStatus.ApprovedForExemption ||
@@ -85,7 +90,7 @@ export const ApprovalTransitionPage: React.FunctionComponent<IApprovalTransition
         );
       }
     }
-  }, [dispatch, navigate, isTransitioned, project, toStatus, setError, params.to]);
+  }, [dispatch, navigate, isTransitioned, project, toStatus, setError, searchParams.to]);
 
   return !error ? (
     <Container fluid style={{ textAlign: 'center' }}>
